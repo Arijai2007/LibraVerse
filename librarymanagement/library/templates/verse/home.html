@@ -1,0 +1,47 @@
+{% extends "verse/shell.html" %}
+{% load static %}
+{% block main %}
+<section class="wrap hero">
+  <div class="hero-copy">
+    <p class="eyebrow"><span></span> The modern library</p>
+    <h1>Find it. Reserve it.<br><em>Read it.</em></h1>
+    <p>Explore your library’s shelves, see what’s available, and reserve your next great read.</p>
+    <form class="hero-search" action="{% url 'catalogue' %}" method="get">
+      <label class="sr-only" for="home-search">Search by title, author or ISBN</label>
+      <span class="search-icon" aria-hidden="true"></span>
+      <input id="home-search" name="q" placeholder="Title, author, or ISBN" autocomplete="off" data-suggestions="{% url 'catalogue_suggestions' %}" aria-controls="home-suggestions">
+      <button class="button forest">Search <span aria-hidden="true">↗</span></button>
+      <div id="home-suggestions" class="suggestions" hidden></div>
+    </form>
+    <a class="text-link" href="{% url 'catalogue' %}">Explore the catalogue <span aria-hidden="true">→</span></a>
+  </div>
+  <div class="hero-image"><img src="{% static 'images/reading-room.webp' %}" width="1312" height="1199" fetchpriority="high" alt="A reading room with forest-green shelves and a brass lamp beside an arched window"></div>
+</section>
+{% if categories %}
+<section class="wrap collections section-space">
+  <div class="section-heading"><h2>Explore collections</h2><a class="text-link" href="{% url 'catalogue' %}">All categories →</a></div>
+  <div class="pills">{% for item in categories %}<a href="{% url 'catalogue' %}?category={{ item.category|urlencode }}">{{ item.category }} <span>{{ item.total }}</span></a>{% endfor %}</div>
+</section>
+{% endif %}
+<section class="wrap section-space">
+  <div class="section-heading"><h2>Fresh from the shelves</h2><a class="text-link" href="{% url 'catalogue' %}">View catalogue →</a></div>
+  {% if featured %}<div class="shelf">{% for book in featured %}{% include "verse/book_card.html" %}{% endfor %}</div>
+  {% else %}<div class="empty"><strong>Public shelves are currently empty.</strong><p>If your library already uses LibraVerse, sign in to browse its collection.</p><a class="text-link" href="{% url 'adminlogin' %}">Sign in →</a></div>{% endif %}
+</section>
+{% if popular %}
+<section class="wrap section-space">
+  <div class="section-heading"><h2>Popular reads</h2></div>
+  <div class="shelf">{% for book in popular %}{% include "verse/book_card.html" %}{% endfor %}</div>
+</section>
+{% endif %}
+<section class="how-section">
+  <div class="wrap section-space">
+    <h2>From shelf to hand</h2>
+    <div class="steps">
+      <div><h3>Discover</h3><p>Search by title, author or ISBN and check live availability.</p></div>
+      <div><h3>Reserve</h3><p>Ask the library to set aside an available copy or join the waitlist.</p></div>
+      <div><h3>Collect</h3><p>Check your pickup deadline and bring your account details to the library.</p></div>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends "verse/shell.html" %}
+{% load socialaccount %}
+{% block title %}Set up a library — LibraVerse{% endblock %}
+{% block main %}
+<div class="wrap section-space narrow">
+  <h1>Set up a library</h1>
+  <p>Create a workspace to catalogue copies and manage circulation.</p>
+  <form method="post" class="surface stacked">
+    {% csrf_token %}{{ form.as_p }}<button class="button forest">Create library</button>
+  </form>
+  {% if google_oauth_enabled and not user.is_authenticated %}<p><a class="button outline" href="{% provider_login_url 'google' %}">Continue with Google</a></p>{% endif %}
+  {% if not user.is_authenticated %}<p>Already have an account? <a class="text-link" href="{% url 'adminlogin' %}">Sign in</a></p>{% endif %}
+</div>
+{% endblock %}

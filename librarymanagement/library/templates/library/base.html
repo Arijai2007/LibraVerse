@@ -1,0 +1,145 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Smart Library Management System{% endblock %}</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{% static 'library/css/custom.css' %}" />
+  <link rel="stylesheet" href="https://unpkg.com/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap">
+  <link rel="stylesheet" href="{% static 'library/css/verse.css' %}">
+  <script src="{% static 'js/verse.js' %}" defer></script>
+  {% block extra_css %}{% endblock %}
+</head>
+
+<body class="verse-workspace">
+<a href="#content" class="skip">Skip to content</a>
+
+<!-- ========== SIDEBAR ========== -->
+<div id="sidebar">
+  <a href="{% url 'home' %}" class="sidebar-logo">
+    <div class="logo-icon"><i class="fas fa-book-open" style="color:#fff;font-size:0.9rem;"></i></div>
+    <span>LibraVerse</span>
+  </a>
+
+  <nav id="sidebar_menu" data-sidebar-scrollable="true">
+    <p class="menu-section-title">Home</p>
+    <div class="menu-item">
+      <a href="{% url 'dashboard' %}" class="menu-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+        <i class="fas fa-chart-line"></i><span>Dashboard</span>
+      </a>
+    </div>
+
+    <div class="menu-item"><a href="{% url 'catalogue' %}" class="menu-link"><i class="fas fa-book-open"></i><span>Browse catalogue</span></a></div>
+    {% if can_circulate %}
+      <p class="menu-section-title">Operations</p>
+      <div class="menu-item"><a href="{% url 'inventory' %}" class="menu-link {% if request.resolver_match.url_name == 'inventory' %}active{% endif %}"><i class="fas fa-book"></i><span>Inventory</span></a></div>
+      <div class="menu-item"><a href="{% url 'circulation_desk' %}" class="menu-link {% if request.resolver_match.url_name == 'circulation_desk' %}active{% endif %}"><i class="fas fa-qrcode"></i><span>Circulation desk</span></a></div>
+      <div class="menu-item"><a href="{% url 'viewissuedbook' %}" class="menu-link"><i class="fas fa-bookmark"></i><span>Open loans</span></a></div>
+      <div class="menu-item"><a href="{% url 'viewstudent' %}" class="menu-link"><i class="fas fa-users"></i><span>Offline readers</span></a></div>
+      <div class="menu-item"><a href="{% url 'reports' %}" class="menu-link {% if request.resolver_match.url_name == 'reports' %}active{% endif %}"><i class="fas fa-chart-line"></i><span>Reports</span></a></div>
+    {% endif %}
+    <p class="menu-section-title">Account</p>
+    <div class="menu-item">
+      <a href="{% url 'userprofile' %}" class="menu-link {% if request.resolver_match.url_name == 'userprofile' %}active{% endif %}">
+        <i class="fas fa-user-circle"></i><span>User Profile</span>
+      </a>
+    </div>
+
+    {% if request.session.is_library_owner and library %}
+      <p class="menu-section-title">Library Admin</p>
+      <div class="menu-item">
+        <a href="{% url 'add_member' %}" class="menu-link {% if request.resolver_match.url_name == 'add_member' %}active{% endif %}">
+          <i class="fas fa-user-plus"></i><span>Add Member</span>
+        </a>
+      </div>
+      <div class="menu-item">
+        <a href="{% url 'view_members' %}" class="menu-link {% if request.resolver_match.url_name == 'view_members' %}active{% endif %}">
+          <i class="fas fa-users"></i><span>View Members</span>
+        </a>
+      </div>
+    {% endif %}
+  </nav>
+
+  <div class="sidebar-footer">
+    <form method="post" action="{% url 'logout' %}">
+      {% csrf_token %}
+      <button type="submit" class="logout-btn">
+        <i class="fas fa-sign-out-alt"></i><span>Logout</span>
+      </button>
+    </form>
+  </div>
+</div>
+<!-- ========== END SIDEBAR ========== -->
+
+
+<!-- ========== MAIN WRAPPER ========== -->
+<div id="main_wrapper">
+
+  <!-- Header -->
+  <div id="header">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button type="button" id="sidebar_toggle" aria-label="Toggle navigation" aria-controls="sidebar" aria-expanded="false" onclick="this.setAttribute('aria-expanded', document.getElementById('sidebar').classList.toggle('open'))"
+              style="display:none;background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:6px;color:#6b7280;">
+        <i class="fas fa-bars"></i>
+      </button>
+      <span style="font-size:0.95rem;font-weight:600;color:#111827;">
+        {% if request.user.is_authenticated %}
+          {% if library %}
+            {{ library.name }} [{{ library.code }}]
+          {% elif request.session.current_library_name %}
+            {{ request.session.current_library_name }}
+          {% elif request.user.admin_profile.library %}
+            {{ request.user.admin_profile.library.name }} [{{ request.user.admin_profile.library.code }}]
+          {% else %}
+            {% block page_title %}Dashboard{% endblock %}
+          {% endif %}
+        {% else %}        {% endif %}
+      </span>
+    </div>
+    <div class="workspace-nav">
+      {% if workspaces|length > 1 %}
+      <details class="workspace-selector"><summary>Switch library</summary><div>
+        {% for item in workspaces %}<form action="{% url 'switch_library' item.code %}" method="post">{% csrf_token %}<button>{{ item.name }}</button></form>{% endfor %}
+      </div></details>
+      {% endif %}
+      {% if library %}
+      <a class="notify-nav" href="{% url 'notifications' %}" aria-label="Notifications, {{ unread_notifications }} unread">
+        <i class="fa-regular fa-bell" aria-hidden="true"></i><span class="notify-label">Notifications</span>{% if unread_notifications %}<strong>{{ unread_notifications }}</strong>{% endif %}
+      </a>
+      {% endif %}
+      <a class="notify-nav workspace-user" href="{% url 'userprofile' %}">{{ request.user.username }}</a>
+    </div>
+  </div>
+
+  <!-- Page Content -->
+  <div id="content">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert {% if message.tags == 'error' %}alert-danger{% elif message.tags == 'success' %}alert-success{% elif message.tags == 'warning' %}alert-warning{% else %}alert-info{% endif %}" role="alert" style="margin-bottom:12px;">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+    {% block content %}{% endblock %}
+  </div>
+
+</div>
+<!-- ========== END MAIN WRAPPER ========== -->
+
+<script>
+  // Show mobile toggle on small screens
+  const _toggleBtn = document.getElementById('sidebar_toggle');
+  if (_toggleBtn) {
+    if (window.innerWidth <= 768) _toggleBtn.style.display = 'block';
+    window.addEventListener('resize', function() {
+      _toggleBtn.style.display = window.innerWidth <= 768 ? 'block' : 'none';
+    });
+  }
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

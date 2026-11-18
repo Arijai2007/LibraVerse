@@ -1,0 +1,44 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="LibraVerse — Smart Library Management System. Find it. Reserve it. Read it.">
+  <title>{% block title %}LibraVerse — Smart Library Management System{% endblock %}</title>
+  <link rel="icon" href="{% static 'favicon.svg' %}">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap">
+  <link rel="stylesheet" href="{% static 'library/css/verse.css' %}">
+  <script src="{% static 'js/verse.js' %}" defer></script>
+</head>
+<body class="verse-public">
+<a href="#main" class="skip">Skip to content</a>
+<header class="public-header">
+  <div class="wrap header-inner">
+    <a class="wordmark" href="{% url 'home' %}"><span aria-hidden="true" class="brand-mark">L</span>LibraVerse<span class="brand-dot" aria-hidden="true">.</span></a>
+    <nav aria-label="Main navigation">
+      <a href="{% url 'home' %}"{% if request.resolver_match.url_name == 'home' %} aria-current="page"{% endif %}>Home</a>
+      <a href="{% url 'catalogue' %}"{% if request.resolver_match.url_name == 'catalogue' %} aria-current="page"{% endif %}>Browse catalogue</a>
+      {% if user.is_authenticated %}
+        <a class="button forest compact" href="{% url 'dashboard' %}">My workspace</a>
+      {% else %}
+        <a href="{% url 'adminlogin' %}">Sign in</a>
+        <a class="button forest compact" href="{% url 'register_member' %}">Join LibraVerse</a>
+      {% endif %}
+    </nav>
+  </div>
+</header>
+<main id="main">
+  {% if messages %}<div class="wrap notices">{% for message in messages %}<p class="notice {{ message.tags }}" role="status">{{ message }}</p>{% endfor %}</div>{% endif %}
+  {% block main %}{% endblock %}
+</main>
+<dialog id="book-quick-view" class="quick-dialog" aria-label="Book quick view"><button class="button outline compact dialog-close" type="button">Close</button><div data-quick-content></div></dialog>
+<footer class="public-footer">
+  <div class="wrap footer-inner">
+    <div><a class="wordmark" href="{% url 'home' %}"><span aria-hidden="true" class="brand-mark">L</span>LibraVerse<span class="brand-dot" aria-hidden="true">.</span></a><p>Smart Library Management System</p></div>
+    <a href="{% url 'catalogue' %}">Catalogue</a>
+    <a href="{% url 'adminsignup' %}">Set up a library</a>
+  </div>
+</footer>
+</body>
+</html>

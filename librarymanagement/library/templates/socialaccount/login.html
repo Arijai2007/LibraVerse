@@ -1,0 +1,7 @@
+{% extends "verse/shell.html" %}
+{% block title %}Continue with Google — LibraVerse{% endblock %}
+{% block main %}
+<div class="wrap narrow section-space"><h1>Continue with Google</h1>
+  <form class="surface stacked" method="post">{% csrf_token %}<button class="button forest">Continue</button> <a class="button outline" href="{% url 'adminlogin' %}">Back to sign in</a></form>
+</div>
+{% endblock %}

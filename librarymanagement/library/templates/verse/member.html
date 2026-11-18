@@ -1,0 +1,25 @@
+{% extends "library/base.html" %}
+{% block title %}My library — LibraVerse{% endblock %}
+{% block content %}
+{% include "verse/workspace_heading.html" with heading="My library" subtitle="Keep track of your books, pickup holds and reading history." %}
+<div class="workspace-actions"><a class="button forest" href="{% url 'catalogue' %}">Browse catalogue</a><a class="button outline" href="{% url 'userprofile' %}">Profile settings</a></div>
+<div class="work-grid">
+  <section class="surface"><h2>Current loans</h2>
+    <ul class="record-list">{% for loan in loans %}<li><a class="text-link" href="{% url 'book_detail' loan.book_id %}">{{ loan.book_name }}</a><span class="availability{% if loan.return_date < today %} unavailable{% endif %}">{% if loan.return_date < today %}Overdue · {% endif %}Due {{ loan.return_date|date:"M j, Y" }}</span></li>{% empty %}<li>No current loans.</li>{% endfor %}</ul>
+    {% if loans.has_previous %}<a href="{% querystring active=loans.previous_page_number %}">Previous loans</a>{% endif %}{% if loans.has_next %} <a href="{% querystring active=loans.next_page_number %}">More loans →</a>{% endif %}
+  </section>
+  <section class="surface"><h2>Waitlist and pickup holds</h2>
+    <ul class="record-list">{% for entry, position in reservations %}<li><a class="text-link" href="{% url 'book_detail' entry.book_id %}">{{ entry.book.name }}</a>
+    {% if position %}<span class="availability unavailable">Waitlist #{{ position }}</span>{% elif entry.hold.expires_at > now %}<span class="availability">Collect by {{ entry.hold.expires_at|date:"M j, H:i T" }}</span>{% else %}<span class="availability unavailable">Pickup window ended</span>{% endif %}</li>{% empty %}<li>No active reservations.</li>{% endfor %}</ul>
+    {% if reservation_page.has_previous %}<a href="{% querystring reservations=reservation_page.previous_page_number %}">Previous reservations</a>{% endif %}{% if reservation_page.has_next %} <a href="{% querystring reservations=reservation_page.next_page_number %}">More reservations →</a>{% endif %}
+  </section>
+  <section class="surface"><h2>Borrowing history</h2>
+    <ul class="record-list">{% for loan in history %}<li><strong>{{ loan.book_name }}</strong><span>{% if loan.returned_at %}Returned {{ loan.returned_at|date:"M j, Y" }}{% else %}Returned{% endif %}</span></li>{% empty %}<li>No returned loans yet.</li>{% endfor %}</ul>
+    {% if history.has_previous %}<a href="{% querystring history=history.previous_page_number %}">Previous returns</a>{% endif %}{% if history.has_next %} <a href="{% querystring history=history.next_page_number %}">More returns →</a>{% endif %}
+  </section>
+  <section class="surface"><h2>Recent notifications</h2>
+    <ul class="record-list">{% for entry in notices %}<li><span>{{ entry.message }}</span><time datetime="{{ entry.created_at|date:'c' }}">{{ entry.created_at|date:"M j" }}</time></li>{% empty %}<li>No notifications yet.</li>{% endfor %}</ul>
+    <a class="text-link" href="{% url 'notifications' %}">All notifications →</a>
+  </section>
+</div>
+{% endblock %}

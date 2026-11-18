@@ -1,0 +1,16 @@
+{% extends "library/base.html" %}
+{% block title %}Invite a member — LibraVerse{% endblock %}
+{% block content %}
+<a class="text-link" href="{% url 'view_members' %}">← Members</a>
+{% include "verse/workspace_heading.html" with heading="Invite a member" subtitle="New readers set a password using a one-time setup link." %}
+<section class="surface narrow">
+  <form method="post" class="stacked">
+    {% csrf_token %}<input type="hidden" name="add_member" value="1">
+    <label>Username<input name="username" maxlength="150" autocomplete="off" required></label>
+    <label>Email address<input type="email" name="email" maxlength="254" placeholder="reader@example.com" required></label>
+    <p>To add an existing account, enter its exact username and matching email.</p>
+    <button class="button forest">Add member</button>
+  </form>
+  <p>Get the setup link from <a class="text-link" href="{% url 'view_members' %}">Members</a>.</p>
+</section>
+{% endblock %}

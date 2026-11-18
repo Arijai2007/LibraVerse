@@ -1,0 +1,34 @@
+{% extends "library/base.html" %}
+{% load static %}
+{% block title %}Operations — LibraVerse{% endblock %}
+{% block content %}
+{% include "verse/workspace_heading.html" with heading="Library operations" subtitle="Track circulation, stock and reader demand across your library." %}
+<div class="workspace-actions"><a class="button forest" href="{% url 'circulation_desk' %}">Open circulation desk</a><a class="button outline" href="{% url 'addbook' %}">Add a title</a><a class="button outline" href="{% url 'reports' %}">Run a report</a></div>
+<div class="metrics">{% for label, value in metrics %}<div class="stat"><span>{{ label }}</span><strong>{{ value }}</strong></div>{% endfor %}</div>
+<div class="work-grid chart-grid">
+  <section class="surface">
+    <h2>Monthly circulation</h2>
+    <div class="chart-frame" aria-hidden="true"><canvas id="monthly-chart"></canvas></div>
+    <details class="chart-table"><summary>View monthly data</summary>
+      <div class="table-scroll"><table class="verse-table"><thead><tr><th scope="col">Metric</th>{% for month in chart.labels %}<th scope="col">{{ month }}</th>{% endfor %}</tr></thead>
+      <tbody>{% for series in chart.series %}<tr><th scope="row">{{ series.name }}</th>{% for value in series.data %}<td>{{ value }}</td>{% endfor %}</tr>{% endfor %}</tbody></table></div>
+    </details>
+  </section>
+  <section class="surface"><h2>Copy utilization</h2><p><strong>{{ utilization }}%</strong> of physical copies are on loan.</p>
+    <div class="chart-frame stock-chart" aria-hidden="true"><canvas id="stock-chart"></canvas></div>
+    <dl class="stock-list">{% for item in chart.stock %}<div><dt>{{ item.label }}</dt><dd>{{ item.total }}</dd></div>{% endfor %}</dl>
+  </section>
+  <section class="surface"><h2>Most borrowed titles</h2><ol class="record-list">{% for book in top %}<li><a class="text-link" href="{% url 'title_inventory' book.pk %}">{{ book.name }}</a><strong>{{ book.total }}</strong></li>{% empty %}<li>No circulation recorded.</li>{% endfor %}</ol></section>
+  <section class="surface"><h2>Most borrowed categories</h2><ol class="record-list">{% for row in genres %}<li><span>{{ row.book__category }}</span><strong>{{ row.total }}</strong></li>{% empty %}<li>No categorized circulation recorded.</li>{% endfor %}</ol></section>
+  <section class="surface"><h2>Recent activity</h2><ul class="record-list">{% for item in activity %}<li><span>{{ item.action }}{% if item.book %} · {{ item.book.name }}{% endif %}{% if item.actor %}<br><small>{{ item.actor.username }}</small>{% endif %}</span><time datetime="{{ item.created_at|date:'c' }}">{{ item.created_at|date:"M j, H:i" }}</time></li>{% empty %}<li>No new activity yet.</li>{% endfor %}</ul></section>
+  {% if request.session.is_library_owner %}<section class="surface"><h2>Reader access</h2>
+    <p>{% if library.public_catalogue %}Visitors can browse this catalogue and register for this library.{% else %}Only signed-in library members can browse this catalogue.{% endif %}</p>
+    <form method="post" action="{% url 'catalogue_visibility' %}">{% csrf_token %}<button class="button outline" name="public" value="{% if library.public_catalogue %}no{% else %}yes{% endif %}">{% if library.public_catalogue %}Make catalogue private{% else %}Open catalogue and registration{% endif %}</button></form>
+  </section>{% endif %}
+</div>
+{{ chart|json_script:"circulation-chart-data" }}
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'vendor/chartjs/chart.umd.js' %}" defer></script>
+<script src="{% static 'js/circulation-charts.js' %}" defer></script>
+{% endblock %}

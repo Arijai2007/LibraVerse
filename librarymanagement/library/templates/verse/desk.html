@@ -1,0 +1,11 @@
+{% extends "library/base.html" %}
+{% block title %}Circulation desk — LibraVerse{% endblock %}
+{% block content %}
+{% include "verse/workspace_heading.html" with heading="Circulation desk" subtitle="Scan a label with your device’s camera or look up a physical copy by ID." %}
+<form class="surface inline-form"><label>Copy ID<input name="code" value="{{ code }}" placeholder="LV-…" maxlength="19" required></label><button class="button forest">Find copy</button></form>
+<div class="workspace-actions"><a class="text-link" href="{% url 'viewissuedbook' %}">Open loans →</a><a class="text-link" href="{% url 'inventory' %}">Find a title →</a></div>
+<section class="surface">
+<h2>Awaiting pickup</h2>
+<ul class="record-list">{% for hold in incoming %}<li><div><a class="text-link" href="{% url 'copy_detail' hold.copy.code %}">{{ hold.copy.book.name }}</a><br>{{ hold.reservation.member.username }} · <span class="mono">{{ hold.copy.code }}</span></div><span>{{ hold.expires_at|date:"M j, H:i T" }}</span></li>{% empty %}<li>No open pickup holds.</li>{% endfor %}</ul>
+</section>
+{% endblock %}

@@ -1,0 +1,18 @@
+<span class="availability {% if not book.quantity %}unavailable{% endif %}">{% if book.quantity %}{{ book.quantity }} available now{% else %}No copies available{% endif %}</span>
+<p class="queue-summary">{{ queue_size }} reader{{ queue_size|pluralize }} waiting</p>
+{% if can_reserve %}
+  {% if position %}<p>You are <strong>#{{ position }}</strong> in the waitlist.</p>{% endif %}
+  {% if reservation.status == "held" %}
+    {% if reservation.hold.expires_at > now %}<p><strong>Ready for pickup</strong> until {{ reservation.hold.expires_at|date:"M j, Y, H:i T" }}.</p>
+    {% else %}<p>Your pickup window has ended. The library is processing the expiry.</p>{% endif %}
+  {% endif %}
+  <form method="post" action="{% url 'reservation_action' book.pk %}" data-reservation-form>
+    {% csrf_token %}
+    {% if reservation %}<button class="button outline" name="action" value="cancel">Cancel reservation</button>
+    {% else %}<button class="button forest" name="action" value="reserve">{% if book.quantity %}Reserve for pickup{% else %}Join waitlist{% endif %}</button>{% endif %}
+  </form>
+{% elif user.is_authenticated and book.library.public_catalogue %}
+  <form method="post" action="{% url 'join_library' book.library.code %}">{% csrf_token %}<input type="hidden" name="book" value="{{ book.pk }}"><button class="button forest">Join {{ book.library.name }}</button></form>
+{% else %}
+  <p><a class="text-link" href="{% url 'adminlogin' %}">Sign in</a> or <a class="text-link" href="{% url 'register_member' %}?library={{ book.library.code|urlencode }}">create an account</a> to reserve.</p>
+{% endif %}

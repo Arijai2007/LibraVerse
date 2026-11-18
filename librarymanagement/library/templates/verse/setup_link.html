@@ -1,0 +1,11 @@
+{% extends "library/base.html" %}
+{% block title %}Invitation link — LibraVerse{% endblock %}
+{% block content %}
+{% include "verse/workspace_heading.html" with heading="Invitation link" %}
+<section class="surface narrow">
+  <p>Share this one-time link with {{ member.username }}. It expires after 24 hours.</p>
+  <label for="invitation-link">Setup link</label>
+  <p><input id="invitation-link" class="lms-input" value="{{ setup_url }}" readonly></p>
+  <a class="text-link" href="{% url 'view_members' %}">← Members</a>
+</section>
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends "library/base.html" %}
+{% block title %}Library members — LibraVerse{% endblock %}
+{% block content %}
+{% include "verse/workspace_heading.html" with heading="Library members" subtitle="Manage access to this library and assign circulation permissions." %}
+<div class="workspace-actions"><a class="button forest" href="{% url 'add_member' %}">Invite a member</a></div>
+<section class="surface table-scroll">
+<table class="verse-table"><thead><tr><th scope="col">Username</th><th scope="col">Email</th><th scope="col">Role</th><th scope="col">Joined</th><th scope="col">Actions</th></tr></thead>
+<tbody>{% for m in memberships %}<tr><td>{{ m.user.username }}</td><td>{{ m.user.email|default:"—" }}</td><td>{{ m.get_role_display }}{% if m.must_change_password %} · Setup pending{% endif %}</td><td>{{ m.joined_at|date:"M j, Y" }}</td>
+<td>{% if m.user_id != library.owner_id %}
+<form method="post" action="{% url 'remove_member' %}" class="workspace-actions">
+  {% csrf_token %}<input type="hidden" name="membership_id" value="{{ m.pk }}">
+  {% if m.must_change_password %}<button class="button outline compact" name="action" value="setup">Get setup link</button>{% endif %}
+  {% if m.role == 'librarian' %}<button class="button outline compact" name="action" value="member">Make member</button>
+  {% else %}<button class="button outline compact" name="action" value="librarian">Make librarian</button>{% endif %}
+  <button class="button outline compact" name="action" value="remove" onclick="return confirm('Remove this account from the library?')">Remove</button>
+</form>{% endif %}</td></tr>{% empty %}<tr><td colspan="5">No members yet.</td></tr>{% endfor %}</tbody>
+</table>
+</section>
+{% endblock %}

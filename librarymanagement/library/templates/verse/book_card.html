@@ -1,0 +1,12 @@
+<article class="book-card">
+  <a class="book-art tone-{{ book.pk|divisibleby:'2'|yesno:'even,odd' }}" href="{% url 'book_detail' book.pk %}" aria-label="{{ book.name }}">
+    {% if book.cover %}<img src="{{ book.cover.url }}" alt="" loading="lazy" width="132" height="189">
+    {% else %}<span class="cover-fallback" aria-hidden="true"><span>{{ book.name|truncatechars:50 }}</span><small>{{ book.author|truncatechars:27 }}</small></span>{% endif %}
+  </a>
+  <div class="book-card-info">
+    <a class="book-name" href="{% url 'book_detail' book.pk %}">{{ book.name }}</a>
+    <p>{{ book.author }} · {{ book.library.name }}</p>
+    <span class="availability {% if not book.quantity %}unavailable{% endif %}">{% if book.quantity %}{{ book.quantity }} available{% else %}Waitlist{% endif %}</span>
+    <button type="button" class="quick-link" data-quick-url="{% url 'book_detail' book.pk %}">Quick view</button>
+  </div>
+</article>

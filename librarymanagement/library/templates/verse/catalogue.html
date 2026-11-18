@@ -1,0 +1,17 @@
+{% extends "verse/shell.html" %}
+{% block title %}Catalogue — LibraVerse{% endblock %}
+{% block main %}
+<div class="wrap section-space">
+  <header class="page-head"><p class="eyebrow"><span></span> Find your next read</p><h1>Book catalogue</h1></header>
+  <form action="{% url 'catalogue' %}" method="get" class="filterbar" data-catalogue-form>
+    <div class="search-field"><label for="q">Search</label><input id="q" type="search" name="q" value="{{ term }}" placeholder="Title, author, or ISBN" autocomplete="off" data-suggestions="{% url 'catalogue_suggestions' %}" aria-controls="search-suggestions"><div id="search-suggestions" class="suggestions" hidden></div></div>
+    <label>Library<select name="library"><option value="">All libraries</option>{% for item in libraries %}<option value="{{ item.code }}"{% if library_code == item.code %} selected{% endif %}>{{ item.name }}</option>{% endfor %}</select></label>
+    <label>Category<select name="category"><option value="">All categories</option>{% for item in categories %}<option value="{{ item }}"{% if category == item %} selected{% endif %}>{{ item }}</option>{% endfor %}</select></label>
+    <label>Availability<select name="availability"><option value="">Any</option><option value="available"{% if availability == "available" %} selected{% endif %}>Available now</option><option value="unavailable"{% if availability == "unavailable" %} selected{% endif %}>Waitlist</option></select></label>
+    <label>Sort by<select name="sort"><option value="title"{% if sort == "title" %} selected{% endif %}>Title</option><option value="author"{% if sort == "author" %} selected{% endif %}>Author</option><option value="available"{% if sort == "available" %} selected{% endif %}>Availability</option><option value="recent"{% if sort == "recent" %} selected{% endif %}>Recently added</option></select></label>
+    <button class="button forest">Apply</button>
+  </form>
+  <p id="catalogue-status" role="status" class="interaction-status"></p>
+  <section id="catalogue-results" aria-label="Catalogue results">{% include "verse/catalogue_results.html" %}</section>
+</div>
+{% endblock %}

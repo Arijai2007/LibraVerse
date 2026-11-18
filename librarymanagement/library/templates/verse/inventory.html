@@ -1,0 +1,18 @@
+{% extends "library/base.html" %}
+{% block title %}Inventory — LibraVerse{% endblock %}
+{% block content %}
+{% include "verse/workspace_heading.html" with heading="Inventory" subtitle="Manage catalogue titles and their physical copies." %}
+<div class="workspace-actions"><a class="button forest" href="{% url 'addbook' %}">Add a title</a><a class="button outline" href="{% url 'import_books' %}">Import titles</a><a class="button outline" href="{% url 'taxonomy' %}">Authors and categories</a><a class="text-link" href="{% url 'viewbook' %}">Bulk edit →</a></div>
+<form class="filterbar staff-filter">
+  <label>Search inventory<input type="search" name="q" value="{{ term }}" placeholder="Title, author, or ISBN"></label>
+  <label>Category<select name="category"><option value="">All categories</option>{% for item in categories %}<option value="{{ item.name }}"{% if category == item.name %} selected{% endif %}>{{ item.name }}</option>{% endfor %}</select></label>
+  <label>State<select name="archived"><option value="0">Active titles</option><option value="1"{% if archived %} selected{% endif %}>Archived titles</option></select></label>
+  <button class="button forest">Filter</button>
+</form>
+<div class="surface table-scroll">
+  <table class="verse-table"><thead><tr><th scope="col">Title</th><th scope="col">Author</th><th scope="col">Category</th><th scope="col">Available</th><th scope="col">Physical copies</th><th scope="col">ISBN</th></tr></thead>
+  <tbody>{% for title in page %}<tr><td><a class="text-link" href="{% url 'title_inventory' title.pk %}">{{ title.name }}</a></td><td>{{ title.author }}</td><td>{{ title.category|default:"—" }}</td><td><span class="availability{% if not title.quantity %} unavailable{% endif %}">{{ title.quantity }}</span></td><td>{{ title.total_copies }}</td><td>{{ title.isbn|default:"—" }}</td></tr>
+  {% empty %}<tr><td colspan="6">No titles match these filters.</td></tr>{% endfor %}</tbody></table>
+  {% include "verse/pagination.html" %}
+</div>
+{% endblock %}

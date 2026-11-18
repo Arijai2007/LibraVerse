@@ -1,0 +1,116 @@
+{% extends 'library/base.html' %}
+{% load static %}
+{% block title %}Issued Books — LibraVerse{% endblock %}
+{% block page_title %}Issued Books{% endblock %}
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+{% endblock %}
+{% block content %}
+<input type="hidden" id="update-issued-books-url" value="{% url 'update_issued_books' %}">
+
+<div class="lms-card">
+  <div class="lms-card-header">
+    <span style="font-size:0.875rem;font-weight:600;">
+      <i class="fas fa-eye" style="color:#3b82f6;margin-right:6px;"></i>
+      {% if show_overdue_only %}Overdue Books{% else %}Issued Books{% endif %}
+      {% if li %}<span style="color:#6b7280;font-weight:400;font-size:0.8rem;margin-left:6px;">({{ li.start_index }}–{{ li.end_index }} of {{ li.paginator.count }})</span>{% endif %}
+    </span>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button id="editBtn" class="btn-primary-lms" style="padding:6px 12px;font-size:0.8rem;">Edit Dates</button>
+      <button id="saveBtn" class="btn-primary-lms" style="display:none;padding:6px 12px;font-size:0.8rem;background:#16a34a;">Save Changes</button>
+      <button id="cancelBtn" class="btn-secondary-lms" style="display:none;padding:6px 12px;font-size:0.8rem;">Cancel</button>
+      {% if not show_overdue_only %}
+        <a href="{% url 'viewissuedbook' %}?show_overdue=true" class="btn-secondary-lms" style="padding:6px 12px;font-size:0.8rem;">Show Overdue</a>
+      {% else %}
+        <a href="{% url 'viewissuedbook' %}" class="btn-secondary-lms" style="padding:6px 12px;font-size:0.8rem;">Show All</a>
+      {% endif %}
+      <a href="{% url 'issuebook' %}" class="btn-primary-lms" style="padding:6px 12px;font-size:0.8rem;">Issue New</a>
+    </div>
+  </div>
+
+  {% if li %}
+  <div style="overflow-x:auto;">
+    <table class="lms-table">
+      <thead>
+        <tr><th>#</th><th>Student</th><th>Enrollment</th><th>Book</th><th>Issue Date</th><th>Return Date</th><th>Fine</th><th>Action</th></tr>
+      </thead>
+      <tbody id="issuedBooksTable">
+        {% for t in li %}
+        <tr data-issuedbook-id="{{ t.7 }}">
+          <td style="color:#9ca3af;">{{ forloop.counter0|add:li.start_index }}</td>
+          <td><span class="static-text">{{ t.0 }}</span>{{ t.0 }}</td>
+          <td><span class="static-text">{{ t.1 }}</span>{{ t.1 }}</td>
+          <td><span class="static-text">{{ t.2 }}</span>{{ t.2 }}</td>
+          <td><span class="static-text">{{ t.3 }}</span>{{ t.3 }}</td>
+          <td><span class="static-text">{{ t.4 }}</span><input type="date" class="editable-field" name="return_date" value="{{ t.4 }}"></td>
+          <td class="{% if t.5 > 0 %}fine-expired{% endif %}">{% if t.5 > 0 %}PKR {{ t.5 }}{% else %}No Fine{% endif %}</td>
+          <td>
+            <button class="btn-danger-lms return-btn" style="padding:5px 10px;font-size:0.78rem;"
+                    data-issuedbook-id="{{ t.7 }}" data-student-name="{{ t.0 }}" data-book-name="{{ t.2 }}">
+              Return
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  {% if li.paginator.num_pages > 1 %}
+  <div style="padding:16px;">
+    <ul class="pagination">
+      {% if li.has_previous %}
+        <li class="page-item"><a class="page-link" href="?page=1{% if show_overdue_only %}&show_overdue=true{% endif %}">First</a></li>
+        <li class="page-item"><a class="page-link" href="?page={{ li.previous_page_number }}{% if show_overdue_only %}&show_overdue=true{% endif %}">Prev</a></li>
+      {% endif %}
+      {% for num in li.paginator.page_range %}
+        {% if li.number == num %}<li class="page-item active"><span class="page-link">{{ num }}</span></li>
+        {% elif num > li.number|add:'-3' and num < li.number|add:'3' %}<li class="page-item"><a class="page-link" href="?page={{ num }}{% if show_overdue_only %}&show_overdue=true{% endif %}">{{ num }}</a></li>
+        {% endif %}
+      {% endfor %}
+      {% if li.has_next %}
+        <li class="page-item"><a class="page-link" href="?page={{ li.next_page_number }}{% if show_overdue_only %}&show_overdue=true{% endif %}">Next</a></li>
+        <li class="page-item"><a class="page-link" href="?page={{ li.paginator.num_pages }}{% if show_overdue_only %}&show_overdue=true{% endif %}">Last</a></li>
+      {% endif %}
+    </ul>
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div style="text-align:center;padding:48px;color:#9ca3af;">
+    <i class="fas fa-inbox" style="font-size:2rem;display:block;margin-bottom:10px;"></i>
+    {% if show_overdue_only %}No overdue books.{% else %}No books issued yet.{% endif %}
+    <div style="margin-top:16px;"><a href="{% url 'issuebook' %}" class="btn-primary-lms">Issue a Book</a></div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Return Modal -->
+<div class="modal fade" id="returnModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Confirm Book Return</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <p>Return this book?</p>
+        <p><strong>Student:</strong> <span id="modalStudentName"></span></p>
+        <p><strong>Book:</strong> <span id="modalBookName"></span></p>
+        <div class="alert alert-warning"><strong>Note:</strong> This cannot be undone.</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+<form id="returnForm" method="POST" action="{% url 'return_issued_book' %}">
+  {% csrf_token %}
+  <input type="hidden" name="issuedbook_id" id="returnIssuedBookId" value="">
+  <button type="submit" class="btn btn-danger">Confirm Return</button>
+</form>      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- viewissuedbook.js handles ALL logic including the return modal — no inline script needed -->
+<script src="{% static 'student/js/viewissuedbook.js' %}"></script>
+{% endblock %}

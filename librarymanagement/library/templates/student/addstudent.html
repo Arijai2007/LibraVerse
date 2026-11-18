@@ -1,0 +1,37 @@
+{% extends 'library/base.html' %}
+{% load static %}
+{% block title %}Add Student — LibraVerse{% endblock %}
+{% block page_title %}Add Student{% endblock %}
+{% block content %}
+
+<div style="display:flex;justify-content:center;">
+  <div class="lms-card" style="width:100%;max-width:620px;">
+    <div class="lms-card-header">
+      <span style="font-size:0.875rem;font-weight:600;">
+        <i class="fas fa-user-plus" style="color:#3b82f6;margin-right:6px;"></i>Add New Student
+      </span>
+    </div>
+    <div class="lms-card-body">
+      <form method="post" class="lms-form-fields">
+        {% csrf_token %}
+        {% for field in form %}
+        <div style="margin-bottom:16px;">
+          <label class="lms-label">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}
+            {% for e in field.errors %}
+            <p style="color:#dc2626;font-size:0.78rem;margin:4px 0 0;">{{ e }}</p>
+            {% endfor %}
+          {% endif %}
+        </div>
+        {% endfor %}
+        <div style="display:flex;gap:10px;margin-top:8px;">
+          <button type="submit" class="btn-primary-lms"><i class="fas fa-save"></i>Add Student</button>
+          <a href="{% url 'viewstudent' %}" class="btn-secondary-lms">View All Students</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

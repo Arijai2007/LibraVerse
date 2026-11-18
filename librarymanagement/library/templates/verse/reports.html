@@ -1,0 +1,19 @@
+{% extends "library/base.html" %}
+{% block title %}Reports — LibraVerse{% endblock %}
+{% block content %}
+{% include "verse/workspace_heading.html" with heading="Reports" subtitle="Filter circulation records and export the same results as CSV or PDF." %}
+<nav class="report-tabs" aria-label="Report types">{% for key, label in report_types %}<a class="button {% if key == report %}forest{% else %}outline{% endif %} compact" href="{% url 'reports' %}?report={{ key }}"{% if key == report %} aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}</nav>
+<form class="filterbar staff-filter" method="get">
+  <input type="hidden" name="report" value="{{ report }}">
+  {% for field in form %}{% if field.name != 'report' %}<label>{{ field.label }}{{ field }}{{ field.errors }}</label>{% endif %}{% endfor %}
+  {{ form.report.errors }}{{ form.non_field_errors }}
+  <button class="button forest">Apply filters</button>
+</form>
+<div class="surface table-scroll">
+  <div class="section-heading"><div><h2>{{ title }}</h2><p>{{ page.paginator.count }} matching record{{ page.paginator.count|pluralize }}</p></div>
+  {% if valid %}<div class="workspace-actions exports"><a class="button outline compact" href="{% querystring format="csv" page=None %}">Download CSV</a><a class="button outline compact" href="{% querystring format="pdf" page=None %}">Download PDF</a></div>{% endif %}</div>
+  <table class="verse-table"><thead><tr>{% for heading in headings %}<th scope="col">{{ heading }}</th>{% endfor %}</tr></thead>
+  <tbody>{% for row in rows %}<tr>{% for value in row %}<td>{{ value }}</td>{% endfor %}</tr>{% empty %}<tr><td colspan="{{ headings|length }}">No matching records.</td></tr>{% endfor %}</tbody></table>
+  {% include "verse/pagination.html" %}
+</div>
+{% endblock %}
