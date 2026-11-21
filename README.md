@@ -45,11 +45,20 @@ The gallery shows the running Django application with a fictional library and sy
 | Area | What LibraVerse supports |
 | --- | --- |
 | Book discovery | Debounced search suggestions, live catalogue filters, sorting, pagination, quick views, and related titles. |
-| Inventory | Titles, authors, categories, cover uploads, CSV imports, and individual copies with stable IDs and lifecycle states. |
+| Inventory | Titles, authors, categories, and individual copies with stable IDs and lifecycle states. Upload a cover for title verification or leave it blank for an automatically generated cover. |
 | Reader accounts | Registration, login, private or public library membership, borrowing history, due dates, and in-app notifications. |
 | Circulation | QR-assisted lookup, printable copy labels, manual copy-ID entry, copy-level checkout, returns, and activity history. |
 | Reservations | First-in, first-out waitlists, one active reservation per title and member, automatic allocation, pickup deadlines, and cancellation. |
-| Staff tools | Library-scoped permissions, operations dashboards, circulation charts, and filtered CSV and PDF reports. |
+| Staff tools | Import titles and offline readers from CSV, manage loans through the circulation desk, and export filtered reports as CSV or PDF. |
+
+### Library roles
+
+| Role | What they can do |
+| --- | --- |
+| Visitor | Browse and search public catalogues. |
+| Reader | Reserve books and view loans, pickup deadlines, and notifications in their library. |
+| Librarian | Manage titles, physical copies, offline readers, loans, and reports in their library. |
+| Owner | Do librarian work, manage memberships and staff roles, and control public catalogue access. |
 
 ## How it works
 
@@ -79,6 +88,7 @@ The circulation service locks inventory and updates the copy record, loan, hold,
 | Templates and interaction | Django templates, custom CSS, vanilla JavaScript, Fetch API |
 | Database | SQLite for local development, PostgreSQL supported for multi-user deployments |
 | Authentication | Django sessions and password validation, django-allauth for optional Google sign-in |
+| Cover verification | Pillow and EasyOCR with English models |
 | Charts and reporting | Chart.js, ReportLab, Python CSV tooling |
 | Server and assets | Gunicorn, WhiteNoise, optional Cloudinary for uploads |
 
@@ -140,17 +150,19 @@ python manage.py runserver
 
 Open the local site at `http://127.0.0.1:8000/`. The catalogue starts empty. Add titles and enable public visibility to show them on the homepage. Select **Set up a library** to create a library owner account. If you also need access to Django’s separate global admin at `/admin/`, run `python manage.py createsuperuser`.
 
-### Book cover verification
+### Book covers
 
-Before using cover uploads, download the English OCR models on the machine that runs Django.
+In **Inventory → Add a title**, leave **Book cover** blank to display a generated cover with the title and author. This also works when an existing cover is removed. The generated design appears on catalogue cards and book detail pages.
+
+To upload a cover, choose a JPEG, PNG, or WebP file up to 5 MB and 20 megapixels. LibraVerse reads the image locally and checks for the full entered title in the detected text. If the title cannot be found, use a clear photo of the front cover with the title visible.
+
+Install the English OCR models on the machine running Django before using cover uploads.
 
 ```bash
 python -c "from easyocr import Reader; Reader(['en'], gpu=False)"
 ```
 
-On a server, run this during provisioning and make the model cache readable by the Django process. Set `EASYOCR_MODULE_PATH` to the same cache directory during provisioning and serving if they run as different users. The app reads the image locally and checks for the full entered title in the detected text. Photos with unclear or stylized lettering may require a clearer front-cover image.
-
-A cover upload is optional. The catalogue and book detail page automatically render a cover with the title and author when the upload is omitted or removed.
+Run this during server provisioning and make the model cache readable by the Django process. If provisioning and serving run as different users, set `EASYOCR_MODULE_PATH` to the same cache directory in both environments.
 
 ### First circulation workflow
 
@@ -159,6 +171,10 @@ A cover upload is optional. The catalogue and book detail page automatically ren
 3. Sign in as a member, find a title, and select **Reserve for pickup** or **Join waitlist**.
 4. At the **Circulation desk**, scan the copy’s QR label or enter its ID. The copy page shows the borrower or assigned hold and offers the appropriate issue or return action.
 5. Open **Reports** to export the same filtered records you see on screen as CSV or PDF.
+
+### CSV imports
+
+In **Inventory → Import titles** or **Offline readers**, use the sample CSV as a starting point, upload a UTF-8 CSV with a header row, and map the columns before confirming. Title imports require a name, author, and quantity. Offline reader imports require a name and enrollment number. Reader gender may be left blank. A row with a field that exceeds its length limit is reported and skipped while valid rows are imported.
 
 ### Configuration
 
@@ -178,16 +194,16 @@ Use [`.env.example`](.env.example) for the complete template.
 ```bash
 python manage.py check
 python manage.py makemigrations --check --dry-run
-python manage.py test
+python manage.py test apps
 ```
 
-The release suite passed 128 tests on SQLite. One PostgreSQL-specific concurrent checkout test was skipped on SQLite. Use a PostgreSQL test connection with permission to create a disposable test database to run that test.
+The suite covers reservations, cover validation, generated covers, CSV imports, and staff workflows. The concurrent checkout test requires row locking and is skipped on SQLite. Use a PostgreSQL test connection with permission to create a disposable test database to run it.
 
 Browser checks used a separate SQLite database, synthetic reader and staff accounts, and desktop and mobile viewports. The project uses real database queries for all counts and charts shown in the screenshots.
 
 ## Deployment
 
-Run the Django WSGI application behind HTTPS with PostgreSQL and durable media storage. The repository includes a Gunicorn `Procfile`, a static collection script, and a legacy Vercel Python scaffold. This release was verified locally. A Render service or Vercel reverse-proxy deployment has not been configured or verified for this repository.
+Run the Django WSGI application behind HTTPS with PostgreSQL and durable media storage. The repository includes a Gunicorn `Procfile`, a static collection script, and a legacy Vercel Python scaffold. The commands below cover a conventional WSGI deployment.
 
 With production environment variables set, a conventional WSGI release uses:
 
