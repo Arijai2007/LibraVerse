@@ -1,9 +1,13 @@
 import csv
 from datetime import timedelta
-from io import StringIO
+from io import BytesIO, StringIO
 from threading import Barrier, Thread
+from unittest.mock import patch
 
+from PIL import Image
+from django.conf import settings
 from django.contrib.auth.models import User
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.db import IntegrityError, close_old_connections, transaction
 from django.test import (
@@ -425,6 +429,54 @@ class CirculationTests(TestCase):
         notice.refresh_from_db()
         self.assertIsNotNone(notice.read_at)
 
+    def test_add_title_checks_printed_cover_title(self):
+        staff = self.sign_in(self.librarian)
+        url = reverse("addbook")
+        self.assertContains(staff.get(url), "Book cover")
+        image = BytesIO()
+        Image.new("RGB", (10, 10)).save(image, format="PNG")
+        image_bytes = image.getvalue()
+        details = {
+            "name": "The Hobbit",
+            "author": "K. Alder",
+            "quantity": 1,
+            "category": "Fiction",
+            "language": "English",
+        }
+        with self.settings(
+            STORAGES={
+                **settings.STORAGES,
+                "default": {"BACKEND": "django.core.files.storage.InMemoryStorage"},
+            }
+        ), patch(
+            "apps.books.forms.read_cover_text",
+            side_effect=["GAME OF THRONES", "THE\nHOBBIT\nJ.R.R. Tolkien"],
+        ):
+            response = staff.post(
+                url,
+                {**details, "cover": SimpleUploadedFile("the_hobbit.png", image_bytes)},
+            )
+            self.assertFormError(
+                response.context["form"],
+                "cover",
+                "The entered title was not found on the cover. Check the title "
+                "or upload the matching cover.",
+            )
+            self.assertFalse(self.library.books.filter(name=details["name"]).exists())
+
+            response = staff.post(
+                url,
+                {**details, "cover": SimpleUploadedFile("photo.png", image_bytes)},
+            )
+            book = self.library.books.get(name=details["name"])
+            self.assertRedirects(response, reverse("title_inventory", args=[book.pk]))
+            self.assertTrue(book.cover.storage.exists(book.cover.name))
+            public_detail = self.client.get(reverse("book_detail", args=[book.pk]))
+            self.assertContains(public_detail, book.cover.url)
+            self.assertNotContains(
+                public_detail, '<span class="cover-title">The Hobbit</span>', html=True
+            )
+
     def test_inventory_edit_archive_and_restore(self):
         staff = self.sign_in(self.librarian)
         response = staff.post(
@@ -443,6 +495,17 @@ class CirculationTests(TestCase):
         self.assertRedirects(response, detail)
         self.assertEqual(book.isbn, "0747532699")
         self.assertEqual(book.copies.count(), 2)
+        self.assertFalse(book.cover)
+        for page in (
+            self.client.get(reverse("catalogue"), {"q": book.name}),
+            self.client.get(reverse("book_detail", args=[book.pk])),
+        ):
+            self.assertContains(
+                page, f'<span class="cover-title">{book.name}</span>', html=True
+            )
+            self.assertContains(
+                page, f'<small class="cover-author">{book.author}</small>', html=True
+            )
         self.assertContains(staff.get(detail), "Save title details")
         staff.post(
             detail,

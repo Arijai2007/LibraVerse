@@ -1,3 +1,5 @@
+import logging
+import re
 from datetime import timedelta
 
 from django import forms
@@ -6,7 +8,10 @@ from django.utils import timezone
 
 from apps.students.models import StudentExtra
 
+from .cover_ocr import cover_contains_title, read_cover_text
 from .models import Book
+
+logger = logging.getLogger(__name__)
 
 
 class BookForm(forms.ModelForm):
@@ -44,18 +49,28 @@ class BookForm(forms.ModelForm):
         model = Book
         fields = [
             "name",
+            "cover",
             "quantity",
             "author",
             "category",
             "language",
             "isbn",
             "description",
-            "cover",
         ]
+        labels = {"cover": "Book cover"}
+        help_texts = {
+            "cover": (
+                "Optional. Leave this blank to use an automatically generated cover. "
+                "For uploads, choose a JPEG, PNG or WebP up to 5 MB with the title clearly visible."
+            ),
+        }
+        widgets = {
+            "cover": forms.ClearableFileInput(
+                attrs={"accept": "image/jpeg,image/png,image/webp"}
+            ),
+        }
 
     def clean_isbn(self):
-        import re
-
         value = re.sub(r"[\s-]", "", self.cleaned_data["isbn"]).upper()
         if value and not re.fullmatch(r"(?:[0-9]{9}[0-9X]|[0-9]{13})", value):
             raise forms.ValidationError("Enter a 10- or 13-character ISBN.")
@@ -63,10 +78,31 @@ class BookForm(forms.ModelForm):
 
     def clean_cover(self):
         cover = self.cleaned_data["cover"]
-        if getattr(cover, "image", None) and (
-            cover.size > 5_000_000 or cover.image.format not in {"JPEG", "PNG", "WEBP"}
-        ):
-            raise forms.ValidationError("Upload a JPEG, PNG or WebP image under 5 MB.")
+        if getattr(cover, "image", None):
+            if cover.size > 5_000_000 or cover.image.format not in {"JPEG", "PNG", "WEBP"}:
+                raise forms.ValidationError("Upload a JPEG, PNG or WebP image up to 5 MB.")
+
+            if cover.image.width * cover.image.height > 20_000_000:
+                raise forms.ValidationError("Choose a cover image under 20 megapixels.")
+
+            title = self.cleaned_data.get("name")
+            if title:
+                try:
+                    text = read_cover_text(cover)
+                except (ImportError, OSError, RuntimeError, ValueError) as error:
+                    logger.warning("Book cover OCR failed", exc_info=True)
+                    raise forms.ValidationError(
+                        "Cover verification is currently unavailable."
+                    ) from error
+                if not text.strip():
+                    raise forms.ValidationError(
+                        "No text was detected. Upload a clearer image of the front cover."
+                    )
+                if not cover_contains_title(text, title):
+                    raise forms.ValidationError(
+                        "The entered title was not found on the cover. Check the title "
+                        "or upload the matching cover."
+                    )
         return cover
 
 
@@ -74,12 +110,12 @@ class TitleForm(BookForm):
     class Meta(BookForm.Meta):
         fields = [
             "name",
+            "cover",
             "author",
             "category",
             "language",
             "isbn",
             "description",
-            "cover",
         ]
 
     def __init__(self, *args, **kwargs):

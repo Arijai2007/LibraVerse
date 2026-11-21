@@ -140,6 +140,18 @@ python manage.py runserver
 
 Open the local site at `http://127.0.0.1:8000/`. The catalogue starts empty. Add titles and enable public visibility to show them on the homepage. Select **Set up a library** to create a library owner account. If you also need access to Django’s separate global admin at `/admin/`, run `python manage.py createsuperuser`.
 
+### Book cover verification
+
+Before using cover uploads, download the English OCR models on the machine that runs Django.
+
+```bash
+python -c "from easyocr import Reader; Reader(['en'], gpu=False)"
+```
+
+On a server, run this during provisioning and make the model cache readable by the Django process. Set `EASYOCR_MODULE_PATH` to the same cache directory during provisioning and serving if they run as different users. The app reads the image locally and checks for the full entered title in the detected text. Photos with unclear or stylized lettering may require a clearer front-cover image.
+
+A cover upload is optional. The catalogue and book detail page automatically render a cover with the title and author when the upload is omitted or removed.
+
 ### First circulation workflow
 
 1. In the owner workspace, use **Add a title** to enter its details and initial copy count.
