@@ -152,3 +152,28 @@ class StudentCSVPDFViewTests(TestCase):
         self.assertEqual(StudentExtra.objects.filter(library=self.library).count(), 2)
         messages = [m.message for m in response.context["messages"]]
         self.assertTrue(any("skipped" in str(message).lower() for message in messages))
+
+    def test_import_students_handles_blank_gender_and_overlong_fields(self):
+        self.client.force_login(self.user)
+        url = reverse("import_students")
+        contents = (
+            "name,enrollment,gender\n"
+            f"{'A' * 31},TOO-LONG,Male\n"
+            "New Student,VALID,\n"
+        )
+        upload = SimpleUploadedFile("students.csv", contents.encode("utf-8"))
+        preview = self.client.post(url, {"csv_file": upload})
+        self.client.post(
+            url,
+            {
+                "action": "confirm_import",
+                "csv_b64": preview.context["csv_b64"],
+                "map_name": "0",
+                "map_enrollment": "1",
+                "map_gender": "2",
+            },
+        )
+
+        self.assertFalse(self.library.students.filter(enrollment="TOO-LONG").exists())
+        student = self.library.students.get(enrollment="VALID")
+        self.assertEqual(student.gender, "")

@@ -252,6 +252,14 @@ def import_books_view(request):
                 if not required and value == "":
                     continue
 
+                max_length = Book._meta.get_field(field).max_length
+                if max_length is not None and len(value) > max_length:
+                    errors.append(
+                        f"Row {row_num}: '{label}' must be at most {max_length} characters."
+                    )
+                    row_error = True
+                    continue
+
                 book_kwargs[field] = value
 
             if not row_error:
