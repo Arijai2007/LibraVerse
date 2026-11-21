@@ -1,0 +1,4 @@
+<span class="cover-fallback{% if book.name|length > 65 %} cover-fallback-long{% elif book.name|length > 35 %} cover-fallback-medium{% endif %}" aria-hidden="true">
+  <span class="cover-title">{{ book.name }}</span>
+  <small class="cover-author">{{ book.author }}</small>
+</span>

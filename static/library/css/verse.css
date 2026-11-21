@@ -68,10 +68,33 @@
 .book-art { background: #e8e5da; display: grid; place-items: center; aspect-ratio: 1.08; padding: 1.1rem; }
 .book-art.tone-even { background: #e4ebe1; }
 .book-art img, .cover-fallback { width: min(100%, 132px); height: auto; aspect-ratio: .698; object-fit: cover; max-height: 100%; border-radius: 2px 4px 4px 2px; box-shadow: 7px 6px 12px #15231d32; }
-.cover-fallback { display: flex; justify-content: center; flex-direction: column; gap: .55rem; padding: .65rem; outline: 1px solid #e2c892a0; outline-offset: -.35rem; overflow-wrap: anywhere; color: #f9f0d8; background: linear-gradient(90deg, #0003 0 6%, transparent 6%), #325647; text-align: center; }
-.tone-even .cover-fallback { background: linear-gradient(90deg, #0003 0 6%, transparent 6%), #704b38; }
-.cover-fallback > span { font: 400 clamp(.9rem, 1.5vw, 1.5rem)/1 var(--serif); }
-.cover-fallback > small { font-size: .62rem; }
+.cover-fallback {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: .45em;
+  padding: 1rem .8rem 1rem 1.15rem;
+  color: #f8efda;
+  background:
+    linear-gradient(90deg, #132b20 0%, #263f31 7%, #bca16a55 8%, transparent 9%),
+    linear-gradient(140deg, #385448, #233c31);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.cover-fallback::before {
+  position: absolute;
+  inset: 6% 6% 6% 11%;
+  border: 1px solid #dcc69099;
+  border-radius: 3px;
+  content: "";
+}
+.cover-title { font: 400 clamp(.88rem, 1.5vw, 1.15rem)/1.08 var(--serif); }
+.cover-title::after { display: block; width: 1.4em; margin: .5em auto 0; border-top: 1px solid #dcc690; content: ""; }
+.cover-author { font-size: .62rem; line-height: 1.2; }
+.cover-fallback-medium .cover-title { font-size: .81rem; }
+.cover-fallback-long .cover-title { font-size: .72rem; }
 .book-card-info { padding: .85rem .85rem 1rem; }
 .book-name { font-weight: 700; overflow-wrap: anywhere; }
 .book-name:hover { text-decoration: underline; }
@@ -118,7 +141,11 @@
 .detail-layout .eyebrow { margin-top: .5rem; }
 .detail-art { background: #e6e9de; aspect-ratio: .93; border-radius: 12px; padding: min(3vw, 2.5rem); }
 .detail-art img, .detail-art .cover-fallback { width: min(100%, 210px); }
-.detail-art .cover-fallback > span { font-size: clamp(1.3rem, 3vw, 2.15rem); }
+.detail-art .cover-fallback { padding: 1.25rem 1rem 1.25rem 1.6rem; }
+.detail-art .cover-title { font-size: clamp(1.35rem, 3vw, 1.9rem); }
+.detail-art .cover-fallback-medium .cover-title { font-size: 1.25rem; }
+.detail-art .cover-fallback-long .cover-title { font-size: 1.08rem; }
+.detail-art .cover-author { font-size: .76rem; }
 .byline { font-size: 1.12rem; color: var(--muted); margin-top: .4rem; }
 .description { max-width: 63ch; }
 .book-facts { display: flex; flex-wrap: wrap; gap: .8rem 1.6rem; border-block: 1px solid var(--line); padding-block: .9rem; margin-block: 1.3rem; }

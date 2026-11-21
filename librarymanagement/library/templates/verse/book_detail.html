@@ -5,7 +5,7 @@
   <a class="text-link backlink" href="{% url 'catalogue' %}">← Catalogue</a>
   <article class="detail-layout" data-book-preview>
     <div class="book-art detail-art">
-      {% if book.cover %}<img src="{{ book.cover.url }}" alt="Cover of {{ book.name }}">{% else %}<div class="cover-fallback"><span>{{ book.name }}</span><small>{{ book.author }}</small></div>{% endif %}
+      {% if book.cover %}<img src="{{ book.cover.url }}" alt="Cover of {{ book.name }}">{% else %}{% include "verse/generated_cover.html" %}{% endif %}
     </div>
     <div>
       <p class="eyebrow"><span></span> {{ book.library.name }}</p>
