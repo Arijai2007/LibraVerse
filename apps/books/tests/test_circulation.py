@@ -91,6 +91,47 @@ class CirculationTests(TestCase):
         self.assertEqual(client.get(reverse("dashboard")).status_code, 200)
         return client
 
+    def test_add_offline_reader_form_and_confirmation(self):
+        staff = self.sign_in(self.librarian)
+        url = reverse("addstudent")
+        page = staff.get(url)
+        self.assertContains(page, "<h1>Add an offline reader</h1>", html=True)
+        self.assertContains(page, 'for="id_enrollment"')
+        details = {"name": "Avery Reader", "enrollment": "R-101", "gender": "Female"}
+
+        response = staff.post(url, details, follow=True)
+        self.assertRedirects(response, reverse("studentadded"))
+        self.assertContains(response, "<h1>Reader added</h1>", html=True)
+        self.assertContains(response, f'href="{reverse("viewstudent")}"')
+        self.assertTrue(self.library.students.filter(enrollment="R-101").exists())
+
+        duplicate = staff.post(url, details)
+        self.assertFormError(
+            duplicate.context["form"],
+            "enrollment",
+            "This enrollment number already exists in this library.",
+        )
+        self.assertContains(duplicate, 'class="errorlist"')
+
+    def test_issue_book_form_and_confirmation(self):
+        staff = self.sign_in(self.librarian)
+        student = self.library.students.create(name="Avery Reader", enrollment="R-102")
+        return_book(self.old_loan.pk, self.library)
+        url = reverse("issuebook")
+        page = staff.get(url)
+        self.assertContains(page, "<h1>Issue a book</h1>", html=True)
+        self.assertContains(page, 'for="id_return_date"')
+
+        response = staff.post(
+            url,
+            {"book": self.title.pk, "student": student.pk, "return_date": self.due},
+        )
+        self.assertContains(response, "<h1>Book issued</h1>", html=True)
+        self.assertContains(response, f'href="{reverse("viewissuedbook")}"')
+        self.assertTrue(
+            IssuedBook.objects.filter(book=self.title, student=student, returned=False).exists()
+        )
+
     def test_registration_to_waitlist_to_pickup_and_reports(self):
         reader = Client()
         response = reader.post(

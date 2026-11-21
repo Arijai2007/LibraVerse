@@ -1,19 +1,7 @@
-{% extends 'library/base.html' %}
-{% load static %}
-{% block title %}Student Added — LibraVerse{% endblock %}
-{% block page_title %}Student Added{% endblock %}
+{% extends "library/base.html" %}
+{% block title %}Reader added - LibraVerse{% endblock %}
 {% block content %}
-<div style="max-width:480px;margin:40px auto;text-align:center;">
-  <div class="lms-card" style="padding:40px 32px;">
-    <div style="width:64px;height:64px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
-      <i class="fas fa-check" style="color:#16a34a;font-size:1.5rem;"></i>
-    </div>
-    <h2 style="font-size:1.2rem;font-weight:700;color:#111827;margin-bottom:8px;">Student Added Successfully!</h2>
-    <p style="color:#6b7280;font-size:0.875rem;margin-bottom:24px;">The student has been registered in the library.</p>
-    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-      <a href="{% url 'addstudent' %}" class="btn-primary-lms"><i class="fas fa-user-plus"></i>Add Another</a>
-      <a href="{% url 'viewstudent' %}" class="btn-secondary-lms"><i class="fas fa-users"></i>View All Students</a>
-    </div>
-  </div>
-</div>
+{% url 'addstudent' as primary_url %}
+{% url 'viewstudent' as secondary_url %}
+{% include "verse/workspace_confirmation.html" with heading="Reader added" detail="The reader is now listed in this library." primary_label="Add another reader" secondary_label="View offline readers" %}
 {% endblock %}
