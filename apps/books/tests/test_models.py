@@ -538,3 +538,28 @@ class BookCSVPDFViewTests(TestCase):
         self.assertEqual(Book.objects.filter(library=self.library, name="Bad Book").count(), 0)
         messages = [m.message for m in response.context["messages"]]
         self.assertTrue(any("Quantity" in message for message in messages))
+
+    def test_import_books_skips_overlong_fields_without_losing_valid_rows(self):
+        self.client.force_login(self.user)
+        url = reverse("import_books")
+        contents = (
+            "name,quantity,author\n"
+            f"Bad Book,1,{'A' * 41}\n"
+            "Valid Book,2,Valid Author\n"
+        )
+        upload = SimpleUploadedFile("books.csv", contents.encode("utf-8"))
+        preview = self.client.post(url, {"csv_file": upload})
+        self.client.post(
+            url,
+            {
+                "action": "confirm_import",
+                "csv_b64": preview.context["csv_b64"],
+                "map_name": "0",
+                "map_quantity": "1",
+                "map_author": "2",
+            },
+        )
+
+        self.assertFalse(self.library.books.filter(name="Bad Book").exists())
+        valid_book = self.library.books.get(name="Valid Book")
+        self.assertEqual(valid_book.copies.count(), 2)

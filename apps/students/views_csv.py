@@ -254,7 +254,15 @@ def import_students_view(request):
                 if field == "gender" and value and value not in VALID_GENDERS:
                     value = "Female"  # fallback default
 
-                student_kwargs[field] = value if value else None
+                model_field = StudentExtra._meta.get_field(field)
+                if len(value) > model_field.max_length:
+                    errors.append(
+                        f"Row {row_num}: '{label}' must be at most {model_field.max_length} characters."
+                    )
+                    row_error = True
+                    continue
+
+                student_kwargs[field] = None if not value and model_field.null else value
 
             if row_error:
                 continue
