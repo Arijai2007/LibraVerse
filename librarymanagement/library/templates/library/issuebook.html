@@ -1,45 +1,25 @@
-{% extends 'library/base.html' %}
-{% load static %}
-{% block title %}Issue Book — LibraVerse{% endblock %}
-{% block page_title %}Issue Book{% endblock %}
+{% extends "library/base.html" %}
+{% block title %}Issue a book - LibraVerse{% endblock %}
 {% block extra_css %}
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
 {% endblock %}
 {% block content %}
-
-<div style="display:flex;justify-content:center;">
-  <div class="lms-card" style="width:100%;max-width:620px;">
-    <div class="lms-card-header">
-      <span style="font-size:0.875rem;font-weight:600;">
-        <i class="fas fa-paper-plane" style="color:#3b82f6;margin-right:6px;"></i>Issue Book to Student
-      </span>
-    </div>
-    <div class="lms-card-body">
-      <form method="post" class="lms-form-fields">
-        {% csrf_token %}
-        {% for field in form %}
-        <div style="margin-bottom:16px;">
-          <label class="lms-label">{{ field.label }}</label>
-          {{ field }}
-          {% if field.errors %}
-            {% for e in field.errors %}
-            <p style="color:#dc2626;font-size:0.78rem;margin:4px 0 0;">{{ e }}</p>
-            {% endfor %}
-          {% endif %}
-        </div>
-        {% endfor %}
-        <div style="display:flex;gap:10px;margin-top:8px;">
-          <button type="submit" class="btn-primary-lms"><i class="fas fa-paper-plane"></i>Issue Book</button>
-          <a href="{% url 'viewissuedbook' %}" class="btn-secondary-lms">View Issued Books</a>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-
+<a class="text-link backlink" href="{% url 'viewissuedbook' %}">← Open loans</a>
+{% include "verse/workspace_heading.html" with heading="Issue a book" %}
+<section class="surface narrow circulation-form">
+  <form method="post" class="stacked">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="button forest">Issue book</button>
+  </form>
+</section>
 {% endblock %}
 {% block extra_js %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script>$(document).ready(function(){ $('select').select2({ placeholder: "Select", allowClear: true, width: '100%' }); });</script>
+<script>
+  $(function () {
+    $('.circulation-form select').select2({ width: '100%' });
+  });
+</script>
 {% endblock %}
