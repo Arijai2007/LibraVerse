@@ -1,7 +1,6 @@
 from django import forms
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
 from django.core import signing
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
@@ -48,7 +47,6 @@ def student_pass(request, pk):
     return redirect("student_history", token=token)
 
 
-@login_required(login_url="adminlogin")
 @staff_required
 @require_GET
 def student_history(request, token):

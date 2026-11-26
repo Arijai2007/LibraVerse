@@ -182,6 +182,8 @@ GOOGLE_OAUTH_ENABLED = all(
 )
 SOCIALACCOUNT_LOGIN_ON_GET = False
 
+ACCOUNT_ADAPTER = "apps.accounts.adapters.ReaderAccountAdapter"
+
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = "http" if DEBUG else "https"
 
 FORCE_SCRIPT_NAME = ""

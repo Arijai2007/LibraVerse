@@ -1,6 +1,7 @@
 import logging
 from time import time
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate
 from django.contrib.auth import login as auth_login
@@ -18,6 +19,8 @@ from django.views import View
 from apps.core.models import AdminProfile, Library
 from apps.members.models import LibraryMembership
 
+from .access import has_staff_access
+
 logger = logging.getLogger(__name__)
 
 
@@ -30,19 +33,33 @@ class AdminLoginView(View):
     """
 
     template_name = "library/adminlogin.html"
+    staff_login = False
 
     def _clear_pending_login_session(self, request):
         request.session.pop("pending_user_id", None)
         request.session.pop("eligible_library_ids", None)
         request.session.pop("pending_login_at", None)
+        request.session.pop("pending_staff_login", None)
 
     def _render_login(self, request, extra_context=None):
-        from .forms import AdminLoginForm
-
-        context = {"form": AdminLoginForm()}
+        context = {
+            "staff_login": self.staff_login,
+            "staff_password_reset_available": settings.INVITATION_EMAIL_ENABLED,
+        }
         if extra_context:
             context.update(extra_context)
         return render(request, self.template_name, context)
+
+    def _check_login_role(self, request, user):
+        is_staff = has_staff_access(user)
+        if is_staff == self.staff_login:
+            return None
+        self._clear_pending_login_session(request)
+        if is_staff:
+            messages.info(request, "Use Staff sign in for your library account.")
+        else:
+            messages.info(request, "Use Reader sign in for your member account.")
+        return self._render_login(request)
 
     def _get_eligible_libraries(self, user):
         return (
@@ -122,12 +139,18 @@ class AdminLoginView(View):
         return self._render_login(request)
 
     def post(self, request):
+        if request.user.is_authenticated:
+            return self._success(request, "dashboard")
+
         pending_user_id = request.session.get("pending_user_id")
         selected_library = request.POST.get("selected_library")
 
         if (
             pending_user_id
-            and time() - request.session.get("pending_login_at", 0) > 300
+            and (
+                time() - request.session.get("pending_login_at", 0) > 300
+                or request.session.get("pending_staff_login") != self.staff_login
+            )
         ):
             self._clear_pending_login_session(request)
             messages.error(request, "Please sign in again to select a library.")
@@ -157,6 +180,10 @@ class AdminLoginView(View):
                     request, "Unable to continue login. Please sign in again."
                 )
                 return self._render_login(request)
+
+            role_error = self._check_login_role(request, user)
+            if role_error is not None:
+                return role_error
 
             try:
                 library_id = int(selected_library)
@@ -193,6 +220,10 @@ class AdminLoginView(View):
             messages.error(request, "Invalid username or password.")
             return self._render_login(request)
 
+        role_error = self._check_login_role(request, user)
+        if role_error is not None:
+            return role_error
+
         library_qs = self._get_eligible_libraries(user)
         library_count = library_qs.count()
 
@@ -209,6 +240,7 @@ class AdminLoginView(View):
         request.session.cycle_key()
         request.session["pending_user_id"] = user.id
         request.session["pending_login_at"] = time()
+        request.session["pending_staff_login"] = self.staff_login
         request.session["eligible_library_ids"] = [lib.id for lib in eligible_libraries]
 
         return self._render_login(
@@ -426,6 +458,11 @@ def register_member(request):
 class InvitedPasswordView(PasswordResetConfirmView):
     template_name = "verse/invited_password.html"
     success_url = reverse_lazy("adminlogin")
+
+    def get_success_url(self):
+        if has_staff_access(self.user):
+            return reverse_lazy("staff_login")
+        return super().get_success_url()
 
     @transaction.atomic
     def form_valid(self, form):

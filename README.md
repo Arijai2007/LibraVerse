@@ -165,6 +165,10 @@ python -c "from easyocr import Reader; Reader(['en'], gpu=False)"
 
 Run this during server provisioning and make the model cache readable by the Django process. If provisioning and serving run as different users, set `EASYOCR_MODULE_PATH` to the same cache directory in both environments.
 
+### Reader and staff sign-in
+
+Use **Sign in** for reader accounts and **Staff sign in** for library owners and librarians. Public registration creates reader access. A library owner can invite or promote a librarian from **Members**. Staff permissions depend on the account's role in the selected library.
+
 ### First circulation workflow
 
 1. In the owner workspace, use **Add a title** to enter its details and initial copy count.

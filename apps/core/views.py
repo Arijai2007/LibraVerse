@@ -5,6 +5,7 @@ from django import forms
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
+from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import ValidationError
 from django.db import DatabaseError, connection, transaction
 from django.http import HttpResponse, JsonResponse
@@ -101,12 +102,18 @@ def library_required(view_func):
 def staff_required(view_func):
     @library_required
     @functools.wraps(view_func)
-    def wrapper(request, *args, **kwargs):
+    def restricted(request, *args, **kwargs):
         from django.core.exceptions import PermissionDenied
 
         if not request.can_circulate:
             raise PermissionDenied
         return view_func(request, *args, **kwargs)
+
+    @functools.wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect_to_login(request.get_full_path(), login_url="staff_login")
+        return restricted(request, *args, **kwargs)
 
     return wrapper
 

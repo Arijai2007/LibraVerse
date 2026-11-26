@@ -297,7 +297,7 @@ def copy_detail(request, code):
         or copy.book.archived
         or copy.status == BookCopy.Status.RETIRED
     ):
-        return redirect_to_login(request.path)
+        return redirect_to_login(request.get_full_path(), login_url="staff_login")
     if not copy:
         raise Http404
     library = copy.book.library
