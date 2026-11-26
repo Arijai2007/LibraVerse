@@ -22,9 +22,11 @@
       <i class="fas fa-cog"></i> Actions
     </button>
     <ul class="dropdown-menu">
-      <li><button class="dropdown-item" id="edit-btn" type="button"><i class="fas fa-edit me-2"></i>Edit</button></li>
-      <li><button class="dropdown-item" id="toggle-btn" type="button"><i class="fas fa-check-square me-2"></i>Select</button></li>
-      <li><hr class="dropdown-divider"></li>
+      {% if students %}
+        <li><button class="dropdown-item" id="edit-btn" type="button"><i class="fas fa-edit me-2"></i>Edit</button></li>
+        <li><button class="dropdown-item" id="toggle-btn" type="button"><i class="fas fa-check-square me-2"></i>Select</button></li>
+        <li><hr class="dropdown-divider"></li>
+      {% endif %}
       <li><a class="dropdown-item" href="{% url 'import_students' %}"><i class="fas fa-file-import me-2"></i>Import CSV</a></li>
     </ul>
   </div>
