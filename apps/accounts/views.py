@@ -200,7 +200,7 @@ class AdminLoginView(View):
             auth_login(
                 request, user, backend="django.contrib.auth.backends.ModelBackend"
             )
-            return self._success(request, "catalogue")
+            return self._success(request, "dashboard")
 
         if library_count == 1:
             return self._login_user_to_library(request, user, library_qs.first())
@@ -304,11 +304,7 @@ def adminsignup_view(request):
 
 
 def afterlogin_view(request):
-    """
-    Redirect after successful social login (Google OAuth, etc).
-    If user has a library, go to dashboard.
-    If not, go to create library.
-    """
+    """Set the active library after social login and open the workspace."""
     if not request.user.is_authenticated:
         return redirect("adminlogin")
 
@@ -335,12 +331,9 @@ def afterlogin_view(request):
         request.session["library_id"] = library.id
         request.session["current_library_name"] = library.name
         request.session["is_library_owner"] = request.user == library.owner
-        # User has a library, go to dashboard
         messages.success(request, f"Welcome back to {library.name}!")
-        return redirect("dashboard")
-    else:
-        # User doesn't have a library, go to create one
-        return redirect("catalogue")
+
+    return redirect("dashboard")
 
 
 @login_required
@@ -418,7 +411,7 @@ def register_member(request):
                 if library:
                     request.session["current_library_id"] = library.pk
                 messages.success(request, "Your LibraVerse account is ready.")
-                return redirect("dashboard" if library else "catalogue")
+                return redirect("dashboard")
     return render(
         request,
         "verse/register.html",

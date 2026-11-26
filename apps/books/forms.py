@@ -15,6 +15,8 @@ logger = logging.getLogger(__name__)
 
 
 class BookForm(forms.ModelForm):
+    language_choices = Book.LANGUAGE_CHOICES
+
     isbn = forms.CharField(required=False, max_length=30, label="ISBN")
     category = forms.CharField(
         max_length=50,

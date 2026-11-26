@@ -207,12 +207,45 @@ class CoreViewsAuthTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_library_required_decorator_no_library(self):
-        """Test @library_required redirects when user has no library."""
-        user2 = User.objects.create_user(username="user2", password="testpass")
-        self.client.login(username="user2", password="testpass")
-        response = self.client.get(reverse("dashboard"))
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, reverse("catalogue"))
+        """Library-specific pages still require a library."""
+        user = User.objects.create_user(username="user2")
+        self.client.force_login(user)
+        self.assertRedirects(self.client.get(reverse("userprofile")), reverse("catalogue"))
+
+    def test_workspace_without_membership_can_join_a_public_library(self):
+        reader = User.objects.create_user(username="new_reader")
+        public_library = Library.objects.create(
+            name="Public Learning Library", owner=self.user, public_catalogue=True
+        )
+        self.client.force_login(reader)
+        session = self.client.session
+        session["current_library_id"] = self.lib.pk
+        session.save()
+
+        page = self.client.get(reverse("dashboard"))
+        self.assertContains(page, "My workspace")
+        self.assertContains(page, public_library.name)
+        self.assertNotContains(page, self.lib.name)
+        private_join = reverse("join_library", args=[self.lib.code])
+        self.assertEqual(self.client.post(private_join).status_code, 404)
+
+        public_join = reverse("join_library", args=[public_library.code])
+        self.assertEqual(self.client.get(public_join).status_code, 405)
+        self.assertContains(page, public_join)
+        self.assertRedirects(self.client.post(public_join), reverse("dashboard"))
+        self.assertContains(self.client.get(reverse("dashboard")), "Current loans")
+        self.assertTrue(
+            LibraryMembership.objects.filter(
+                library=public_library, user=reader, role="member"
+            ).exists()
+        )
+
+    def test_workspace_without_any_public_libraries_shows_next_steps(self):
+        user = User.objects.create_user(username="unaffiliated_reader")
+        self.client.force_login(user)
+        page = self.client.get(reverse("dashboard"))
+        self.assertContains(page, "No public libraries are accepting members right now.")
+        self.assertContains(page, reverse("adminsignup"))
 
     def test_dashboard_view_returns_200(self):
         """Test dashboard returns 200 for authorized user."""

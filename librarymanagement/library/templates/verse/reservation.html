@@ -14,5 +14,5 @@
 {% elif user.is_authenticated and book.library.public_catalogue %}
   <form method="post" action="{% url 'join_library' book.library.code %}">{% csrf_token %}<input type="hidden" name="book" value="{{ book.pk }}"><button class="button forest">Join {{ book.library.name }}</button></form>
 {% else %}
-  <p><a class="text-link" href="{% url 'adminlogin' %}">Sign in</a> or <a class="text-link" href="{% url 'register_member' %}?library={{ book.library.code|urlencode }}">create an account</a> to reserve.</p>
+  <p><a class="text-link" href="{% url 'adminlogin' %}?next={{ request.path|urlencode }}">Sign in</a> or <a class="text-link" href="{% url 'register_member' %}?library={{ book.library.code|urlencode }}">create an account</a> to reserve.</p>
 {% endif %}

@@ -1,0 +1,6 @@
+<datalist id="category-options">
+  {% for item in library.categories.all %}<option value="{{ item.name }}">{% endfor %}
+</datalist>
+<datalist id="language-options">
+  {% for value, label in form.language_choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+</datalist>

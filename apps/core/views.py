@@ -37,11 +37,8 @@ def get_user_library(user):
         return Library.objects.filter(owner=user).first()
 
 
-def library_required(view_func):
-    """
-    Decorator to ensure the logged-in user has a library.
-    Redirects to library creation page if not.
-    """
+def with_library_context(view_func):
+    """Resolve the signed-in user's active library and permissions."""
 
     @never_cache
     @functools.wraps(view_func)
@@ -73,7 +70,7 @@ def library_required(view_func):
             if membership:
                 library = membership.library
         if library is None:
-            return redirect("catalogue")
+            return view_func(request, *args, **kwargs)
 
         request.session["current_library_id"] = library.pk
         request.session["is_library_owner"] = request.user.pk == library.owner_id
@@ -83,6 +80,19 @@ def library_required(view_func):
         request.can_circulate = request.user.pk == library.owner_id or bool(
             membership and membership.role == "librarian"
         )
+        return view_func(request, *args, **kwargs)
+
+    return wrapper
+
+
+def library_required(view_func):
+    """Require an active library for library-specific pages."""
+
+    @with_library_context
+    @functools.wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        if not hasattr(request, "library"):
+            return redirect("catalogue")
         return view_func(request, *args, **kwargs)
 
     return wrapper
@@ -118,8 +128,19 @@ def home_view(request):
     return home(request)
 
 
-@library_required
+@with_library_context
 def dashboard_view(request):
+    if not hasattr(request, "library"):
+        return render(
+            request,
+            "verse/workspace_setup.html",
+            {
+                "public_libraries": Library.objects.filter(public_catalogue=True).order_by(
+                    "name", "pk"
+                ),
+            },
+        )
+
     from apps.books.catalogue import member_dashboard
     from apps.books.reporting import operations_dashboard
 
