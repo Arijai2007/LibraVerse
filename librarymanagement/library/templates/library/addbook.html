@@ -6,7 +6,7 @@
 <section class="surface narrow">
   <form method="post" enctype="multipart/form-data" class="stacked">
     {% csrf_token %}{{ form.as_p }}
-    <datalist id="category-options">{% for item in library.categories.all %}<option value="{{ item.name }}">{% endfor %}</datalist>
+    {% include "verse/title_options.html" %}
     <button class="button forest">Add title</button>
   </form>
 </section>
