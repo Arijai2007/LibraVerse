@@ -64,13 +64,17 @@ class StudentCSVPDFViewTests(TestCase):
         self.assertIn(self.existing_student.name, content)
         self.assertIn(self.existing_student.enrollment, content)
 
-    def test_students_csv_sample_download(self):
+    def test_students_csv_template_download(self):
         self.client.login(username="student", password="12345")
-        response = self.client.get(reverse("students_csv_sample"))
+        response = self.client.get(reverse("students_csv_template"))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response["Content-Type"], "text/csv")
         content = response.content.decode("utf-8")
-        self.assertIn("name,enrollment,address,phone,gender", content)
+        self.assertEqual(content.splitlines(), ["name,enrollment,address,phone,gender"])
+        self.assertEqual(
+            response["Content-Disposition"],
+            'attachment; filename="students_import_template.csv"',
+        )
 
     def test_import_students_get_shows_upload_form(self):
         self.client.login(username="student", password="12345")

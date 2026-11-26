@@ -16,7 +16,7 @@ LibraVerse brings a searchable public catalogue, a reader workspace, and a staff
 
 ![LibraVerse homepage showing title search, featured collections, and the reading room banner](docs/screenshots/homepage.png)
 
-The gallery shows the running Django application with a fictional library and synthetic circulation records.
+The gallery shows the catalogue, circulation tools, and role-specific workspaces.
 
 | Catalogue | Book details |
 | --- | --- |
@@ -128,7 +128,7 @@ cd LibraVerse
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
-cp .env.example .env
+cp .env.template .env
 ```
 
 **Windows PowerShell**
@@ -138,7 +138,7 @@ git clone https://github.com/shivaa-rana/LibraVerse.git
 Set-Location LibraVerse
 py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
-Copy-Item .env.example .env
+Copy-Item .env.template .env
 ```
 
 Generate a unique Django secret in `.env`, apply migrations, and start the development server. On Windows, use `.\.venv\Scripts\python.exe` in place of `python`.
@@ -185,11 +185,11 @@ Owners can set a daily fine in rupees and a grace period under **Library operati
 
 ### CSV imports
 
-In **Inventory → Import titles** or **Offline readers**, use the sample CSV as a starting point, upload a UTF-8 CSV with a header row, and map the columns before confirming. Title imports require a name, author, and quantity. Offline reader imports require a name and enrollment number. Reader gender may be left blank. A row with a field that exceeds its length limit is reported and skipped while valid rows are imported.
+In **Inventory → Import titles** or **Offline readers**, download the CSV template, and add your records. Upload the file as UTF-8 CSV with a header row and map the columns before confirming. Title imports require a name, author, and quantity. Offline reader imports require a name and enrollment number. Reader gender may be left blank. A row with a field that exceeds its length limit is reported and skipped while valid rows are imported.
 
 ### Configuration
 
-Use [`.env.example`](.env.example) for the complete template.
+Use [`.env.template`](.env.template) for the complete template.
 
 | Setting | Purpose |
 | --- | --- |
@@ -225,7 +225,7 @@ Django renders the pages on Render. Vercel serves the public web address and the
 
 Once connected, a push or merge to `main` triggers a deploy on both platforms through their GitHub integrations. Render and Vercel build independently, so one may finish before the other.
 
-The Blueprint uses free Render services for a demo. Free PostgreSQL expires after 30 days. Use durable PostgreSQL for longer-running data and Cloudinary for persistent uploads. The build provisions the English EasyOCR models and CPU dependencies. Check cover extraction on your Render instance and its memory limits. Schedule `python manage.py process_circulation` if you want reminders and hold expiry to run without a user request.
+The Blueprint provisions a Render web service and PostgreSQL database. Free PostgreSQL expires after 30 days. Use durable PostgreSQL for longer-running data and Cloudinary for persistent uploads. The build provisions the English EasyOCR models and CPU dependencies. Check cover extraction on your Render instance and its memory limits. Schedule `python manage.py process_circulation` if you want reminders and hold expiry to run without a user request.
 
 ### Conventional WSGI deployment
 

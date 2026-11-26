@@ -139,17 +139,15 @@ def export_books_pdf_view(request):
     return response
 
 
-# ── BOOK CSV SAMPLE DOWNLOAD
+# ── BOOK CSV TEMPLATE DOWNLOAD
 
 
 @staff_required
-def download_books_csv_sample_view(request):
+def download_books_csv_template_view(request):
     response = HttpResponse(content_type="text/csv")
-    response["Content-Disposition"] = 'attachment; filename="books_sample.csv"'
+    response["Content-Disposition"] = 'attachment; filename="books_import_template.csv"'
     writer = csv.writer(response)
     writer.writerow(["name", "quantity", "author", "category", "language"])
-    writer.writerow(["The Alchemist", "5", "Paulo Coelho", "Novel", "English"])
-    writer.writerow(["Sapiens", "3", "Yuval Noah Harari", "History", "English"])
     return response
 
 
