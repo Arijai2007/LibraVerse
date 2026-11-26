@@ -42,7 +42,7 @@
         <i class="fas fa-info-circle"></i> How it works
       </p>
       <ol style="margin:0;padding-left:20px;font-size:0.82rem;color:#1e3a5f;line-height:1.8;">
-        <li>Download the <a href="{% url 'books_csv_sample' %}" style="color:#3b82f6;">sample CSV</a> to see the expected format.</li>
+        <li>Download the <a href="{% url 'books_csv_template' %}" style="color:#3b82f6;">CSV template</a> and fill it with your records.</li>
         <li>Upload your CSV file (any column names are fine — you'll map them in the next step).</li>
         <li>Map your CSV columns to the book fields and confirm the import.</li>
       </ol>
@@ -75,8 +75,8 @@
         <button type="submit" class="btn-primary-lms" style="padding:9px 20px;">
           <i class="fas fa-arrow-right"></i> Next: Map Columns
         </button>
-        <a href="{% url 'books_csv_sample' %}" class="btn-secondary-lms" style="padding:9px 14px;font-size:0.8rem;">
-          <i class="fas fa-download"></i> Sample CSV
+        <a href="{% url 'books_csv_template' %}" class="btn-secondary-lms" style="padding:9px 14px;font-size:0.8rem;">
+          <i class="fas fa-download"></i> Download CSV template
         </a>
       </div>
     </form>

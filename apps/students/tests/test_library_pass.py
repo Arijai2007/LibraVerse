@@ -28,7 +28,7 @@ class LibraryPassTests(TestCase):
                 library=cls.library, user=user, role=role, must_change_password=False
             )
         cls.student = StudentExtra.objects.create(
-            library=cls.library, name="Sample Student", enrollment="S-17", user=cls.reader
+            library=cls.library, name="Library Pass Student", enrollment="S-17", user=cls.reader
         )
         cls.book = Book.objects.create(
             library=cls.library, name="A Record of Stars", author="A. Writer", quantity=1

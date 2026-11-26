@@ -1,7 +1,7 @@
 # Local configuration and credentials
 .env
 .env.*
-!.env.example
+!.env.template
 *.key
 *.pem
 *.p12

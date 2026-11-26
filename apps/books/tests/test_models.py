@@ -457,13 +457,17 @@ class BookCSVPDFViewTests(TestCase):
         self.assertIn(self.book.name, content)
         self.assertIn(self.book.author, content)
 
-    def test_books_csv_sample_download(self):
+    def test_books_csv_template_download(self):
         self.client.login(username="owner", password="testpass")
-        response = self.client.get(reverse("books_csv_sample"))
+        response = self.client.get(reverse("books_csv_template"))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response["Content-Type"], "text/csv")
         content = response.content.decode("utf-8")
-        self.assertIn("name,quantity,author,category,language", content)
+        self.assertEqual(content.splitlines(), ["name,quantity,author,category,language"])
+        self.assertEqual(
+            response["Content-Disposition"],
+            'attachment; filename="books_import_template.csv"',
+        )
 
     def test_import_books_get_shows_upload_form(self):
         self.client.login(username="owner", password="testpass")

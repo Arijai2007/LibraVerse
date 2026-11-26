@@ -4,7 +4,7 @@ from .views_csv import (
     import_books_view,
     export_books_csv_view,
     export_books_pdf_view,
-    download_books_csv_sample_view,
+    download_books_csv_template_view,
 )
 
 urlpatterns = [
@@ -36,5 +36,5 @@ urlpatterns = [
     path("import/", import_books_view, name="import_books"),
     path("export/csv/", export_books_csv_view, name="export_books_csv"),
     path("export/pdf/", export_books_pdf_view, name="export_books_pdf"),
-    path("import/sample/", download_books_csv_sample_view, name="books_csv_sample"),
+    path("import/template/", download_books_csv_template_view, name="books_csv_template"),
 ]

@@ -4,7 +4,7 @@ from .views_csv import (
     import_students_view,
     export_students_csv_view,
     export_students_pdf_view,
-    download_students_csv_sample_view,
+    download_students_csv_template_view,
 )
 
 urlpatterns = [
@@ -26,6 +26,6 @@ urlpatterns = [
     path("export/csv/", export_students_csv_view, name="export_students_csv"),
     path("export/pdf/", export_students_pdf_view, name="export_students_pdf"),
     path(
-        "import/sample/", download_students_csv_sample_view, name="students_csv_sample"
+        "import/template/", download_students_csv_template_view, name="students_csv_template"
     ),
 ]

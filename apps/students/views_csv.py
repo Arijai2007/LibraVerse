@@ -144,21 +144,15 @@ def export_students_pdf_view(request):
     return response
 
 
-# ── STUDENT CSV SAMPLE DOWNLOAD
+# ── STUDENT CSV TEMPLATE DOWNLOAD
 
 
 @staff_required
-def download_students_csv_sample_view(request):
+def download_students_csv_template_view(request):
     response = HttpResponse(content_type="text/csv")
-    response["Content-Disposition"] = 'attachment; filename="students_sample.csv"'
+    response["Content-Disposition"] = 'attachment; filename="students_import_template.csv"'
     writer = csv.writer(response)
     writer.writerow(["name", "enrollment", "address", "phone", "gender"])
-    writer.writerow(
-        ["Ali Hassan", "2024-CS-001", "Karachi, Pakistan", "03001234567", "Male"]
-    )
-    writer.writerow(
-        ["Sara Ahmed", "2024-CS-002", "Lahore, Pakistan", "03009876543", "Female"]
-    )
     return response
 
 
