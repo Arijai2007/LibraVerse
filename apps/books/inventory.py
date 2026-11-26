@@ -9,17 +9,15 @@ from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db import IntegrityError, transaction
 from django.db.models import Count, Q
-from django.http import Http404, HttpResponse
+from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_POST
-from reportlab.graphics import renderSVG
-from reportlab.graphics.barcode.qr import QrCodeWidget
-from reportlab.graphics.shapes import Drawing
 
 from apps.core.models import Library
+from apps.core.qr import public_link, qr_label
 from apps.core.views import staff_required
 from apps.members.models import LibraryMembership
 from apps.students.models import StudentExtra
@@ -338,12 +336,7 @@ def copy_detail(request, code):
 
 
 def _copy_url(request, copy):
-    path = reverse("copy_detail", args=[copy.code])
-    return (
-        settings.PUBLIC_BASE_URL + path
-        if settings.PUBLIC_BASE_URL
-        else request.build_absolute_uri(path)
-    )
+    return public_link(request, reverse("copy_detail", args=[copy.code]))
 
 
 @staff_required
@@ -400,7 +393,4 @@ def copy_action(request, code):
 @require_GET
 def copy_qr(request, code):
     copy = get_object_or_404(BookCopy, code=code, book__library=request.library)
-    qr = QrCodeWidget(_copy_url(request, copy), barWidth=180, barHeight=180)
-    drawing = Drawing(180, 180)
-    drawing.add(qr)
-    return HttpResponse(renderSVG.drawToString(drawing), content_type="image/svg+xml")
+    return qr_label(_copy_url(request, copy))
