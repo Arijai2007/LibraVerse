@@ -1,20 +1,17 @@
 from django import forms
-from django.conf import settings
 from django.contrib import messages
 from django.core import signing
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
-from django.http import Http404, HttpResponse
+from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
-from reportlab.graphics import renderSVG
-from reportlab.graphics.barcode.qr import QrCodeWidget
-from reportlab.graphics.shapes import Drawing
 
 from apps.books.models import IssuedBook
 from apps.books.services import settle_fine, student_loans
 from apps.core.models import Library
+from apps.core.qr import public_link, qr_label
 from apps.core.views import staff_required
 
 from .models import StudentExtra
@@ -58,7 +55,13 @@ def student_history(request, token):
     return render(
         request,
         "student/library_pass.html",
-        {"library": request.library, "student": student, "token": token, "page": page},
+        {
+            "library": request.library,
+            "student": student,
+            "token": token,
+            "page": page,
+            "pass_url": _pass_url(request, token),
+        },
     )
 
 
@@ -66,15 +69,11 @@ def student_history(request, token):
 @require_GET
 def student_pass_qr(request, token):
     _student_from_pass(request.library, token)
-    path = reverse("student_history", args=[token])
-    url = (
-        settings.PUBLIC_BASE_URL + path
-        if settings.PUBLIC_BASE_URL
-        else request.build_absolute_uri(path)
-    )
-    drawing = Drawing(180, 180)
-    drawing.add(QrCodeWidget(url, barWidth=180, barHeight=180))
-    return HttpResponse(renderSVG.drawToString(drawing), content_type="image/svg+xml")
+    return qr_label(_pass_url(request, token))
+
+
+def _pass_url(request, token):
+    return public_link(request, reverse("student_history", args=[token]))
 
 
 @staff_required
