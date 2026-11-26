@@ -13,6 +13,7 @@ from apps.core.models import Library
 from apps.core.views import library_required
 from apps.members.models import LibraryMembership
 
+from .book_match import recommendations
 from .models import Book, BookCopy, IssuedBook, Notification, Reservation
 from .services import OPEN, cancel_reservation, queue_position, reserve
 
@@ -150,6 +151,39 @@ def _reader_access(book, user):
             user=user,
             must_change_password=False,
         ).exists()
+    )
+
+
+@never_cache
+@require_GET
+def book_match(request):
+    prompt = request.GET.get("q", "").strip()[:160]
+    library_code = request.GET.get("library", "")[:12]
+    available_only = request.GET.get("available") == "1"
+    books = visible_books(request.user)
+    if library_code:
+        books = books.filter(library__code=library_code)
+    if available_only:
+        books = books.filter(quantity__gt=0)
+
+    matches = recommendations(books, prompt) if prompt else []
+    for result in matches:
+        book = result["book"]
+        result["can_reserve"] = _reader_access(book, request.user)
+        result["has_reservation"] = result["can_reserve"] and book.reservations.filter(
+            member=request.user, status__in=OPEN
+        ).exists()
+
+    return render(
+        request,
+        "verse/book_match.html",
+        {
+            "prompt": prompt,
+            "library_code": library_code,
+            "available_only": available_only,
+            "libraries": visible_libraries(request.user).order_by("name", "pk"),
+            "matches": matches,
+        },
     )
 
 

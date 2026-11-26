@@ -45,6 +45,7 @@ The gallery shows the running Django application with a fictional library and sy
 | Area | What LibraVerse supports |
 | --- | --- |
 | Book discovery | Debounced search suggestions, live catalogue filters, sorting, pagination, quick views, and related titles. |
+| Book Match | Describe what you want to read and get up to three catalogue recommendations, with the matched terms and current availability. Members can reserve directly from the results. |
 | Inventory | Titles, authors, categories, and individual copies with stable IDs and lifecycle states. Upload a cover for title verification or leave it blank for an automatically generated cover. |
 | Reader accounts | Registration, login, private or public library membership, borrowing history, due dates, and in-app notifications. |
 | Circulation | QR-assisted lookup, printable copy labels, manual copy-ID entry, copy-level checkout, returns, and activity history. |
