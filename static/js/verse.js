@@ -11,27 +11,33 @@
 
   document.querySelectorAll('[data-suggestions]').forEach(input => {
     const panel = document.getElementById(input.getAttribute('aria-controls'));
+    const form = input.form;
     let timer;
     let request;
     function hide() {
       panel.hidden = true;
       panel.replaceChildren();
     }
-    input.addEventListener('input', () => {
+    function dismiss() {
       clearTimeout(timer);
       request?.abort();
-      const term = input.value.trim();
       hide();
-      if (term.length < 2) return;
+    }
+    input.addEventListener('input', () => {
+      dismiss();
+      const term = input.value.trim();
+      if (term.length < 3) return;
       timer = setTimeout(async () => {
-        request = new AbortController();
+        const operation = new AbortController();
+        request = operation;
         const url = new URL(input.dataset.suggestions, location.href);
+        url.search = new URLSearchParams(new FormData(form)).toString();
         url.searchParams.set('q', term);
         try {
-          const response = await fetch(url, {signal: request.signal});
+          const response = await fetch(url, {signal: operation.signal});
           if (!response.ok) return;
           const {results} = await response.json();
-          if (input.value.trim() !== term || document.activeElement !== input) return;
+          if (operation.signal.aborted || document.activeElement !== input) return;
           for (const result of results) {
             const link = document.createElement('a');
             link.href = result.url;
@@ -43,12 +49,12 @@
           }
           panel.hidden = !results.length;
         } catch (error) {
-          if (error.name !== 'AbortError') hide();
+          if (!operation.signal.aborted) hide();
         }
       }, 240);
     });
     input.addEventListener('keydown', event => {
-      if (event.key === 'Escape') hide();
+      if (event.key === 'Escape') dismiss();
       if (event.key === 'ArrowDown' && !panel.hidden) {
         event.preventDefault();
         panel.querySelector('a')?.focus();
@@ -57,12 +63,16 @@
     panel.addEventListener('keydown', event => {
       if (event.key === 'Escape') {
         input.focus();
-        hide();
+        dismiss();
       }
     });
-    input.closest('form').addEventListener('focusout', event => {
-      if (!input.closest('form').contains(event.relatedTarget)) hide();
+    form.addEventListener('focusout', event => {
+      if (!form.contains(event.relatedTarget)) dismiss();
     });
+    form.addEventListener('change', event => {
+      if (event.target.matches('select')) dismiss();
+    });
+    form.addEventListener('submit', dismiss);
   });
 
   const filters = document.querySelector('[data-catalogue-form]');

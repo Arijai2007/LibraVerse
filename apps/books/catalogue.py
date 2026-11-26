@@ -24,6 +24,8 @@ SORTS = {
     "recent": ("-pk",),
 }
 
+MIN_SUGGESTION_LENGTH = 3
+
 
 def visible_libraries(user):
     libraries = Library.objects.all()
@@ -48,6 +50,44 @@ def search_titles(books, term):
         if isbn:
             criteria |= Q(isbn__icontains=isbn)
         books = books.filter(criteria)
+    return books
+
+
+def title_suggestions(books, detail_view, include_library=False):
+    return JsonResponse(
+        {
+            "results": [
+                {
+                    "title": book.name,
+                    "author": book.author,
+                    "library": book.library.name if include_library else "",
+                    "url": reverse(detail_view, args=[book.pk]),
+                }
+                for book in books.order_by("name", "pk")[:7]
+            ]
+        }
+    )
+
+
+def _catalogue_filters(params):
+    return {
+        "term": params.get("q", "").strip()[:120],
+        "category": params.get("category", "")[:50],
+        "library_code": params.get("library", "")[:12],
+        "availability": params.get("availability", ""),
+    }
+
+
+def _filtered_catalogue(books, term, category, library_code, availability):
+    books = search_titles(books, term)
+    if category:
+        books = books.filter(category=category)
+    if library_code:
+        books = books.filter(library__code=library_code)
+    if availability == "available":
+        return books.filter(quantity__gt=0)
+    if availability == "unavailable":
+        return books.filter(quantity=0)
     return books
 
 
@@ -81,30 +121,16 @@ def home(request):
 @require_GET
 def catalogue(request):
     source = visible_books(request.user)
-    term = request.GET.get("q", "").strip()[:120]
-    category = request.GET.get("category", "")[:50]
-    library_code = request.GET.get("library", "")[:12]
-    status = request.GET.get("availability", "")
+    filters = _catalogue_filters(request.GET)
     sort = request.GET.get("sort", "title")
-    books = search_titles(source, term)
-    if category:
-        books = books.filter(category=category)
-    if library_code:
-        books = books.filter(library__code=library_code)
-    if status == "available":
-        books = books.filter(quantity__gt=0)
-    elif status == "unavailable":
-        books = books.filter(quantity=0)
+    books = _filtered_catalogue(source, **filters)
     page = Paginator(books.order_by(*SORTS.get(sort, SORTS["title"])), 15).get_page(
         request.GET.get("page")
     )
     context = {
         "page": page,
-        "term": term,
-        "category": category,
-        "availability": status,
+        **filters,
         "sort": sort,
-        "library_code": library_code,
         "libraries": visible_libraries(request.user).order_by("name"),
         "categories": source.exclude(category="")
         .order_by("category")
@@ -122,23 +148,11 @@ def catalogue(request):
 @never_cache
 @require_GET
 def suggestions(request):
-    term = request.GET.get("q", "").strip()[:120]
-    if len(term) < 2:
+    filters = _catalogue_filters(request.GET)
+    if len(filters["term"]) < MIN_SUGGESTION_LENGTH:
         return JsonResponse({"results": []})
-    books = search_titles(visible_books(request.user), term).order_by("name", "pk")[:7]
-    return JsonResponse(
-        {
-            "results": [
-                {
-                    "title": book.name,
-                    "author": book.author,
-                    "library": book.library.name,
-                    "url": reverse("book_detail", args=[book.pk]),
-                }
-                for book in books
-            ]
-        }
-    )
+    books = _filtered_catalogue(visible_books(request.user), **filters)
+    return title_suggestions(books, "book_detail", include_library=True)
 
 
 def _reader_access(book, user):

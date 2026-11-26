@@ -4,6 +4,15 @@
 <a class="text-link" href="{% url 'circulation_desk' %}">← Circulation desk</a>
 {% include "verse/workspace_heading.html" with heading=copy.book.name %}
 <div class="workspace-actions"><span class="mono">{{ copy.code }}</span><span class="availability">{{ copy.get_status_display }}</span><a class="text-link" href="{% url 'title_inventory' copy.book_id %}">Title inventory →</a></div>
+<section class="surface">
+  <h2>Book details</h2>
+  <dl class="book-facts">
+    <div><dt>Author</dt><dd>{{ copy.book.author }}</dd></div>
+    <div><dt>Category</dt><dd>{{ copy.book.category|default:"—" }}</dd></div>
+    <div><dt>Language</dt><dd>{{ copy.book.language|default:"—" }}</dd></div>
+    <div><dt>ISBN</dt><dd>{{ copy.book.isbn|default:"—" }}</dd></div>
+  </dl>
+</section>
 <div class="work-grid">
 <section class="surface circulation-action"><h2>Issue or return</h2>
 {% if loan %}
@@ -28,7 +37,25 @@
   <button class="button outline" name="action" value="status">Update status</button></form>
 </section>{% endif %}
 <section class="surface"><h2>Circulation history</h2>
-  <ul class="record-list">{% for entry in history %}<li><div>{% if entry.borrower %}{{ entry.borrower.username }}{% elif entry.student.library_id == library.pk %}{{ entry.student.name }}{% else %}{{ entry.enrollment }}{% endif %}<br><small>Issued {{ entry.issuedate|date:"M j, Y" }}</small></div><span>{% if entry.returned %}Returned {{ entry.returned_at|date:"M j, Y" }}{% else %}On loan{% endif %}</span></li>{% empty %}<li>No circulation recorded for this copy.</li>{% endfor %}</ul>
+  <div class="table-scroll">
+    <table class="verse-table">
+      <thead><tr><th scope="col">Borrower</th><th scope="col">Issued</th><th scope="col">Due</th><th scope="col">Returned</th></tr></thead>
+      <tbody>
+      {% for entry in history %}
+        <tr>
+          <th scope="row">
+            {% if entry.borrower %}{{ entry.borrower.username }}
+            {% elif entry.student.library_id == library.pk %}{{ entry.student.name|default:entry.enrollment }}
+            {% else %}{{ entry.enrollment }}{% endif %}
+          </th>
+          <td>{{ entry.issuedate|date:"M j, Y" }}</td>
+          <td>{{ entry.return_date|date:"M j, Y" }}</td>
+          <td>{% if entry.returned %}{{ entry.returned_at|date:"M j, Y"|default:"Date unavailable" }}{% else %}On loan{% endif %}</td>
+        </tr>
+      {% empty %}<tr><td colspan="4">No circulation recorded for this copy.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
   {% include "verse/pagination.html" %}
 </section>
 </div>

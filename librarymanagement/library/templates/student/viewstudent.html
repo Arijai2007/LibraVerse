@@ -67,6 +67,7 @@
   <a href="{% url 'addstudent' %}" class="btn-primary-lms" style="padding:6px 12px;font-size:0.8rem;">
     <i class="fas fa-user-plus"></i> Add Student
   </a>
+  {% include "verse/qr_scanner.html" with scan_kind="student" scan_title="Scan student QR" %}
 
 </div>
   </div>

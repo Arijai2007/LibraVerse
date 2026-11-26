@@ -188,6 +188,10 @@ class CirculationTests(TestCase):
         qr = librarian.get(reverse("copy_qr", args=[self.copy.code]))
         self.assertEqual(qr["Content-Type"], "image/svg+xml")
         self.assertIn(b"<svg", qr.content)
+        self.assertContains(librarian.get(desk), "Scan book QR")
+        copy_page = librarian.get(copy)
+        for text in ("Book details", self.title.isbn, "Circulation history", self.previous.username):
+            self.assertContains(copy_page, text)
         action = reverse("copy_action", args=[self.copy.code])
         self.assertRedirects(
             librarian.post(action, {"action": "return", "loan": self.old_loan.pk}), copy
@@ -393,6 +397,42 @@ class CirculationTests(TestCase):
         )
         with self.assertRaisesMessage(ValueError, "overdue"):
             reserve(other.pk, self.previous)
+
+    def test_title_suggestions_respect_threshold_and_inventory_filters(self):
+        archived = Book.objects.create(
+            library=self.library,
+            name="A forest almanac",
+            author=self.title.author,
+            quantity=1,
+            archived=True,
+        )
+        Book.objects.create(
+            library=self.private, name="A forest in winter", author="Author", quantity=1
+        )
+        public = reverse("catalogue_suggestions")
+        staff = reverse("inventory_suggestions")
+        librarian = self.sign_in(self.librarian)
+        for client, url, detail in (
+            (self.client, public, "book_detail"),
+            (librarian, staff, "title_inventory"),
+        ):
+            self.assertEqual(client.get(url, {"q": "fo"}).json(), {"results": []})
+            for term in ("for", "forest of books", "978085"):
+                results = client.get(url, {"q": term}).json()["results"]
+                self.assertEqual([match["url"] for match in results], [
+                    reverse(detail, args=[self.title.pk])
+                ])
+        self.assertEqual(
+            self.client.get(public, {"q": "for", "availability": "available"}).json(),
+            {"results": []},
+        )
+        results = librarian.get(staff, {"q": "for", "archived": 1}).json()["results"]
+        self.assertEqual([match["title"] for match in results], [archived.name])
+        self.assertEqual(
+            librarian.get(staff, {"q": "for", "category": "History"}).json(),
+            {"results": []},
+        )
+        self.assertEqual(self.sign_in(self.first).get(staff, {"q": "for"}).status_code, 403)
 
     def test_privacy_permissions_csrf_and_notification_ownership(self):
         private = Book.objects.create(

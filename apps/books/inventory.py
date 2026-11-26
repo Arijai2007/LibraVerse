@@ -9,7 +9,7 @@ from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db import IntegrityError, transaction
 from django.db.models import Count, Q
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -22,7 +22,12 @@ from apps.core.views import staff_required
 from apps.members.models import LibraryMembership
 from apps.students.models import StudentExtra
 
-from .catalogue import search_titles, visible_libraries
+from .catalogue import (
+    MIN_SUGGESTION_LENGTH,
+    search_titles,
+    title_suggestions,
+    visible_libraries,
+)
 from .forms import TitleForm
 from .models import Author, Book, BookCopy, BookHold, Category, IssuedBook
 from .services import (
@@ -84,17 +89,27 @@ class CopyIssueForm(forms.Form):
         return values
 
 
+def _inventory_filters(params):
+    return {
+        "term": params.get("q", "").strip()[:120],
+        "category": params.get("category", "")[:50],
+        "archived": params.get("archived") == "1",
+    }
+
+
+def _filtered_inventory(library, term, category, archived):
+    books = search_titles(Book.objects.filter(library=library, archived=archived), term)
+    if category:
+        books = books.filter(category=category)
+    return books
+
+
 @staff_required
 @require_GET
 def inventory(request):
     library = request.library
-    term = request.GET.get("q", "").strip()[:120]
-    category = request.GET.get("category", "")[:50]
-    archived = request.GET.get("archived") == "1"
-    books = search_titles(Book.objects.filter(library=library, archived=archived), term)
-    if category:
-        books = books.filter(category=category)
-    books = books.annotate(
+    filters = _inventory_filters(request.GET)
+    books = _filtered_inventory(library, **filters).annotate(
         total_copies=Count("copies", filter=~Q(copies__status=BookCopy.Status.RETIRED))
     )
     return render(
@@ -105,11 +120,20 @@ def inventory(request):
             "page": Paginator(books.order_by("name", "pk"), 15).get_page(
                 request.GET.get("page")
             ),
-            "term": term,
-            "category": category,
-            "archived": archived,
+            **filters,
             "categories": library.categories.all(),
         },
+    )
+
+
+@staff_required
+@require_GET
+def inventory_suggestions(request):
+    filters = _inventory_filters(request.GET)
+    if len(filters["term"]) < MIN_SUGGESTION_LENGTH:
+        return JsonResponse({"results": []})
+    return title_suggestions(
+        _filtered_inventory(request.library, **filters), "title_inventory"
     )
 
 
@@ -262,7 +286,14 @@ def circulation_desk(request):
     return render(
         request,
         "verse/desk.html",
-        {"library": library, "incoming": incoming, "code": code},
+        {
+            "library": library,
+            "incoming": incoming,
+            "code": code,
+            "scan_url": public_link(
+                request, reverse("copy_detail", args=["qr-record-id"])
+            ),
+        },
     )
 
 

@@ -29,7 +29,12 @@ class LibraryPassTests(TestCase):
                 library=cls.library, user=user, role=role, must_change_password=False
             )
         cls.student = StudentExtra.objects.create(
-            library=cls.library, name="Library Pass Student", enrollment="S-17", user=cls.reader
+            library=cls.library,
+            name="Library Pass Student",
+            enrollment="S-17",
+            user=cls.reader,
+            address="15 Test Lane",
+            phone="5550107",
         )
         cls.book = Book.objects.create(
             library=cls.library, name="A Record of Stars", author="A. Writer", quantity=1
@@ -42,11 +47,15 @@ class LibraryPassTests(TestCase):
         return response.url
 
     def test_pass_and_qr_require_staff_in_the_students_library(self):
+        issue_book(self.student, self.book, timezone.localdate())
         self.client.force_login(self.librarian)
         url = self.pass_url()
         token = resolve(url).kwargs["token"]
         qr = reverse("student_pass_qr", args=[token])
-        self.assertContains(self.client.get(url), self.student.name)
+        self.assertContains(self.client.get(reverse("viewstudent")), "Scan student QR")
+        page = self.client.get(url)
+        for text in (self.student.name, self.student.address, self.student.phone, self.book.name):
+            self.assertContains(page, text)
         self.assertContains(self.client.get(qr), "<svg")
         self.assertEqual(self.client.get(url.replace(token, token + "a")).status_code, 404)
 

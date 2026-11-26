@@ -1,0 +1,11 @@
+{% load static %}
+<button type="button" class="button outline" data-open-qr-scanner hidden>{{ scan_title }}</button>
+<dialog class="quick-dialog qr-dialog" data-qr-scanner data-scan-kind="{{ scan_kind }}" data-scan-url="{{ scan_url }}" aria-labelledby="qr-scanner-title">
+  <button type="button" class="button outline dialog-close">Close</button>
+  <h2 id="qr-scanner-title">{{ scan_title }}</h2>
+  <video muted playsinline aria-label="Camera preview" hidden></video>
+  <p class="interaction-status" role="status" data-qr-status></p>
+  <label class="qr-file-input">Choose an image with the QR code<input type="file" accept="image/*"></label>
+</dialog>
+<script src="{% static 'vendor/jsqr/jsQR.js' %}" defer></script>
+<script src="{% static 'js/qr-scanner.js' %}" defer></script>

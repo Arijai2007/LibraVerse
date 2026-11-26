@@ -6,9 +6,11 @@ from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db import IntegrityError, transaction
 from django.db.models import Q
 from django.shortcuts import redirect, render
+from django.urls import reverse
 
 from apps.books.models import IssuedBook
 from apps.core.models import Library
+from apps.core.qr import public_link
 from apps.core.views import staff_required
 
 from .filters import StudentFilter
@@ -87,6 +89,9 @@ def viewstudent_view(request):
             "filter": student_filter,
             "query": query,
             "gender_choices": StudentExtra.GENDER_CHOICES,
+            "scan_url": public_link(
+                request, reverse("student_history", args=["qr-record-id"])
+            ),
             "library": library,
         },
     )

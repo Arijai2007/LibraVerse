@@ -11,6 +11,7 @@ urlpatterns = [
     path("titles/<int:pk>/", catalogue.book_detail, name="book_detail"),
     path("titles/<int:pk>/reservation/", catalogue.reservation_action, name="reservation_action"),
     path("inventory/", inventory.inventory, name="inventory"),
+    path("inventory/suggestions/", inventory.inventory_suggestions, name="inventory_suggestions"),
     path("inventory/<int:pk>/", inventory.title_inventory, name="title_inventory"),
     path("inventory/references/", inventory.taxonomy, name="taxonomy"),
     path("inventory/visibility/", inventory.catalogue_visibility, name="catalogue_visibility"),
