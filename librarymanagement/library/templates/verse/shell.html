@@ -21,6 +21,10 @@
       <a href="{% url 'catalogue' %}"{% if request.resolver_match.url_name == 'catalogue' %} aria-current="page"{% endif %}>Browse catalogue</a>
       {% if user.is_authenticated %}
         <a class="button forest compact" href="{% url 'dashboard' %}">My workspace</a>
+        <form method="post" action="{% url 'logout' %}">
+          {% csrf_token %}
+          <button class="button outline compact" type="submit">Log out</button>
+        </form>
       {% else %}
         <a href="{% url 'adminlogin' %}">Sign in</a>
         <a class="button forest compact" href="{% url 'register_member' %}">Join LibraVerse</a>
