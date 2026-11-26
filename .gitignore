@@ -18,6 +18,8 @@
 /media/
 /uploads/
 /staticfiles/
+/vercel-public/
+/.ocr-cache/
 
 # Local Python, editor, and deployment files
 __pycache__/
