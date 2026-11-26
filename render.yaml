@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: libraverse-backend
+    runtime: python
+    plan: free
+    branch: main
+    autoDeployTrigger: commit
+    healthCheckPath: /healthz/
+    buildCommand: bash build_files.sh
+    startCommand: python manage.py migrate --noinput && exec gunicorn librarymanagement.wsgi:application --bind "0.0.0.0:$PORT" --workers 1 --threads 2 --timeout 120
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: TRUST_PROXY_SSL_HEADER
+        value: "True"
+      - key: EASYOCR_MODULE_PATH
+        value: .ocr-cache
+      - key: OMP_NUM_THREADS
+        value: "1"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: libraverse-db
+          property: connectionString
+
+databases:
+  - name: libraverse-db
+    plan: free

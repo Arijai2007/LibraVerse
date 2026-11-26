@@ -31,6 +31,8 @@ def env_list(name, default=""):
 
 
 ALLOWED_HOSTS = env_list("ALLOWED_HOSTS", "127.0.0.1,localhost")
+if render_host := os.environ.get("RENDER_EXTERNAL_HOSTNAME"):
+    ALLOWED_HOSTS.append(render_host)
 CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS")
 LIBRAVERSE_HOLD_HOURS = config("LIBRAVERSE_HOLD_HOURS", default=48, cast=int)
 LIBRAVERSE_LOAN_DAYS = config("LIBRAVERSE_LOAN_DAYS", default=15, cast=int)
@@ -230,6 +232,7 @@ LOGGING = {
 # Production security settings (active when DEBUG=False)
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
+    SECURE_REDIRECT_EXEMPT = [r"^healthz/$"]
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_HSTS_SECONDS = config("SECURE_HSTS_SECONDS", default=31536000, cast=int)

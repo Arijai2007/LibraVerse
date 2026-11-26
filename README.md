@@ -210,7 +210,22 @@ Browser checks used a separate SQLite database, synthetic reader and staff accou
 
 ## Deployment
 
-Run the Django WSGI application behind HTTPS with PostgreSQL and durable media storage. The repository includes a Gunicorn `Procfile`, a static collection script, and a legacy Vercel Python scaffold. The commands below cover a conventional WSGI deployment.
+### Render backend and Vercel frontend
+
+Django renders the pages on Render. Vercel serves the public web address and the catalogue's CSS, JavaScript, and images. It forwards page and form requests to Render, so login and reservations use one public origin.
+
+1. In Render, create a **Blueprint** from the connected GitHub repository and choose `main`. The Blueprint defines the Django web service, PostgreSQL database, database migrations, and the `/healthz/` check. Use the connected GitHub repository rather than its public clone URL so Render can auto-deploy.
+2. In Vercel, import the same repository and select `main` as the production branch. Set `LIBRAVERSE_RENDER_ORIGIN` to the service's HTTPS `onrender.com` origin, with no path. Use the repository's root as the project root. Disable preview deployments or give previews an isolated backend and database.
+3. In Render, set `PUBLIC_BASE_URL` and `CSRF_TRUSTED_ORIGINS` to the exact HTTPS Vercel production origin. Set `ALLOWED_HOSTS` to the Vercel hostname without the scheme. Render's own hostname is allowed automatically. Redeploy Render after applying these settings.
+4. Check the homepage and `/healthz/` on the Vercel URL. Sign in there and submit a reservation to verify sessions, redirects, and CSRF through the proxy. Check a generated QR link against the public URL.
+
+Once connected, a push or merge to `main` triggers a deploy on both platforms through their GitHub integrations. Render and Vercel build independently, so one may finish before the other.
+
+The Blueprint uses free Render services for a demo. Free PostgreSQL expires after 30 days. Use durable PostgreSQL for longer-running data and Cloudinary for persistent uploads. The build provisions the English EasyOCR models and CPU dependencies. Check cover extraction on your Render instance and its memory limits. Schedule `python manage.py process_circulation` if you want reminders and hold expiry to run without a user request.
+
+### Conventional WSGI deployment
+
+Run the Django WSGI application behind HTTPS with PostgreSQL and durable media storage. The repository also includes a Gunicorn `Procfile`.
 
 With production environment variables set, a conventional WSGI release uses:
 

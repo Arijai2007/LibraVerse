@@ -3,6 +3,7 @@ from . import views
 from apps.books import catalogue
 
 urlpatterns = [
+    path("healthz/", views.health_check, name="health_check"),
     path("book-match/", catalogue.book_match, name="book_match"),
     path("catalogue/", catalogue.catalogue, name="catalogue"),
     path("catalogue/suggest/", catalogue.suggestions, name="catalogue_suggestions"),
