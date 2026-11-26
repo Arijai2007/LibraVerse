@@ -105,14 +105,14 @@
             <div>
               <label class="lms-label">Library Name *</label>
               <input type="text" class="lms-input" id="libraryName"
-                     value="{% if admin_profile.library %}{{ admin_profile.library.name }}{% endif %}"
+                     value="{{ library.name }}"
                      placeholder="Enter library name"
                      {% if not request.session.is_library_owner %}readonly style="background:#f9fafb;cursor:not-allowed;"{% endif %}>
             </div>
             <div>
               <label class="lms-label">Library Code</label>
               <input type="text" class="lms-input" id="libraryCode"
-                     value="{% if admin_profile.library %}{{ admin_profile.library.code }}{% endif %}"
+                     value="{{ library.code }}"
                      readonly style="background:#f9fafb;">
             </div>
           </div>
@@ -163,7 +163,7 @@
             <div>
               <label class="lms-label">Date of Birth</label>
               <input type="date" class="lms-input" id="dateOfBirth"
-                     value="{% if admin_profile and admin_profile.date_of_birth %}{{ admin_profile.date_of_birth }}{% endif %}">
+                     value="{{ admin_profile.date_of_birth|date:"Y-m-d" }}">
             </div>
           </div>
           <div style="margin-bottom:16px;">

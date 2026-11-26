@@ -177,7 +177,7 @@ def userprofile_view(request):
 
 class ProfileForm(forms.Form):
     first_name = forms.CharField(max_length=150)
-    last_name = forms.CharField(max_length=150)
+    last_name = forms.CharField(max_length=150, required=False)
     email = forms.EmailField()
     phone = forms.CharField(max_length=20, required=False)
     address = forms.CharField(max_length=100, required=False)

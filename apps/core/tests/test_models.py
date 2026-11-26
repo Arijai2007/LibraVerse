@@ -255,6 +255,22 @@ class CoreViewsAuthTests(TestCase):
         response = self.client.get(reverse("dashboard"))
         self.assertEqual(response.status_code, 200)
 
+    def test_profile_displays_and_updates_the_selected_library(self):
+        other = Library.objects.create(name="Second Library", owner=self.user)
+        self.client.force_login(self.user)
+        self.client.post(reverse("switch_library", args=[other.code]))
+
+        profile = self.client.get(reverse("userprofile"))
+        self.assertContains(profile, f'value="{other.name}"')
+        self.assertContains(profile, f'value="{other.code}"')
+        self.assertNotContains(profile, f'value="{self.lib.code}"')
+        response = self.client.post(
+            reverse("update_library"), {"library_name": "Renamed Library"}
+        )
+        self.assertEqual(response.status_code, 200)
+        other.refresh_from_db()
+        self.assertEqual(other.name, "Renamed Library")
+
     def test_userprofile_view_requires_login(self):
         """Test userprofile requires login."""
         response = self.client.get(reverse("userprofile"))
