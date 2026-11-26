@@ -1,0 +1,13 @@
+{% extends "library/base.html" %}
+{% block title %}Overdue fine policy - LibraVerse{% endblock %}
+{% block content %}
+<a class="text-link backlink" href="{% url 'dashboard' %}">← Library operations</a>
+{% include "verse/workspace_heading.html" with heading="Overdue fine policy" subtitle="Set the daily charge and grace period for new loans on student library passes." %}
+<section class="surface narrow">
+  <form method="post" class="stacked">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button class="button forest" type="submit">Save fine policy</button>
+  </form>
+</section>
+{% endblock %}

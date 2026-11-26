@@ -173,6 +173,12 @@ Run this during server provisioning and make the model cache readable by the Dja
 4. At the **Circulation desk**, scan the copy’s QR label or enter its ID. The copy page shows the borrower or assigned hold and offers the appropriate issue or return action.
 5. Open **Reports** to export the same filtered records you see on screen as CSV or PDF.
 
+### Student passes and overdue fines
+
+Open **Offline readers → Open pass** to see a student's borrowing history and printable QR code. A scan opens the same history after staff sign in and select the student's library workspace.
+
+Owners can set a daily fine in rupees and a grace period under **Library operations → Configure overdue fines**. Fines start disabled. Each new student loan keeps the policy in effect at checkout. The amount accrues after the grace period and stops on the return date. Staff can mark a returned loan's fine paid or waive it from the student's pass. Existing loans keep a zero rate, and loans to accounts without a student record are outside the student fine policy.
+
 ### CSV imports
 
 In **Inventory → Import titles** or **Offline readers**, use the sample CSV as a starting point, upload a UTF-8 CSV with a header row, and map the columns before confirming. Title imports require a name, author, and quantity. Offline reader imports require a name and enrollment number. Reader gender may be left blank. A row with a field that exceeds its length limit is reported and skipped while valid rows are imported.

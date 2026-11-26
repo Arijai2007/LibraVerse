@@ -1,3 +1,4 @@
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.contrib.auth.models import User
 import uuid
@@ -10,6 +11,12 @@ class Library(models.Model):
         User, on_delete=models.CASCADE, related_name="owned_libraries"
     )
     public_catalogue = models.BooleanField(default=False)
+    fine_daily_rate = models.DecimalField(
+        max_digits=8, decimal_places=2, default=0, validators=[MinValueValidator(0)]
+    )
+    fine_grace_days = models.PositiveSmallIntegerField(
+        default=0, validators=[MaxValueValidator(365)]
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):

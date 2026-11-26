@@ -306,10 +306,10 @@ def archive_title(book_id, library, actor):
 
 @transaction.atomic
 def issue_book(student, book, return_date, *, copy_id=None, borrower=None, actor=None):
+    from apps.students.models import StudentExtra
+
     book = lock_title(book.pk)
     if student is not None:
-        from apps.students.models import StudentExtra
-
         student = StudentExtra.objects.filter(
             pk=student.pk, library_id=book.library_id
         ).first()
@@ -322,6 +322,10 @@ def issue_book(student, book, return_date, *, copy_id=None, borrower=None, actor
     if student and student.user and borrower and student.user_id != borrower.pk:
         raise ValueError("Choose a single borrower.")
     borrower = borrower or (student.user if student else None)
+    has_student_pass = student is not None or (
+        borrower is not None
+        and StudentExtra.objects.filter(library_id=book.library_id, user=borrower).exists()
+    )
     reason = eligibility(book, borrower)
     if reason:
         raise ValueError(reason)
@@ -382,6 +386,8 @@ def issue_book(student, book, return_date, *, copy_id=None, borrower=None, actor
         enrollment=student.enrollment if student else f"LV-{borrower.pk}",
         book_name=book.name,
         return_date=return_date,
+        fine_daily_rate=book.library.fine_daily_rate if has_student_pass else 0,
+        fine_grace_days=book.library.fine_grace_days if has_student_pass else 0,
     )
     BookCopy.objects.filter(pk=copy.pk).update(status=BookCopy.Status.BORROWED)
     _refresh_stock(book)
@@ -418,6 +424,30 @@ def return_book(issued_book_id, library, actor=None):
     audit(book, "Copy returned", actor)
     _reconcile(book, now)
     return loan
+
+
+@transaction.atomic
+def settle_fine(loan_id, student, status, actor):
+    if status not in (IssuedBook.FineStatus.PAID, IssuedBook.FineStatus.WAIVED):
+        raise ValueError("Choose a valid fine action.")
+    # Match the lock order used by checkout and return.
+    Library.objects.select_for_update(no_key=True).get(pk=student.library_id)
+    loan = student_loans(student).select_for_update(of=("self",)).get(pk=loan_id)
+    amount = loan.overdue_fine()
+    if not loan.returned or amount <= 0:
+        raise ValueError("Only returned loans with a fine can be settled.")
+    if loan.fine_status != IssuedBook.FineStatus.OUTSTANDING:
+        raise ValueError("This fine has already been settled.")
+    loan.fine_status = status
+    loan.save(update_fields=["fine_status"])
+    audit(loan.book, f"Loan #{loan.pk} fine {status} (INR {amount:.2f})", actor)
+
+
+def student_loans(student):
+    identity = Q(student=student)
+    if student.user_id:
+        identity |= Q(borrower_id=student.user_id, student__isnull=True)
+    return IssuedBook.objects.filter(identity, book__library_id=student.library_id)
 
 
 def set_available_stock(book, count, actor):
