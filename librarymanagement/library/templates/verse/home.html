@@ -13,7 +13,10 @@
       <button class="button forest">Search <span aria-hidden="true">↗</span></button>
       <div id="home-suggestions" class="suggestions" hidden></div>
     </form>
-    <a class="text-link" href="{% url 'catalogue' %}">Explore the catalogue <span aria-hidden="true">→</span></a>
+    <div class="match-entry">
+      <a class="button outline" href="{% url 'book_match' %}">Try Book Match</a>
+      <a class="text-link" href="{% url 'catalogue' %}">Explore the catalogue <span aria-hidden="true">→</span></a>
+    </div>
   </div>
   <div class="hero-image"><img src="{% static 'images/reading-room.webp' %}" width="1312" height="1199" fetchpriority="high" alt="A reading room with forest-green shelves and a brass lamp beside an arched window"></div>
 </section>
