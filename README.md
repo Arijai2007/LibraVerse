@@ -210,7 +210,7 @@ python manage.py test apps
 
 The suite covers reservations, cover validation, generated covers, CSV imports, and staff workflows. The concurrent checkout test requires row locking and is skipped on SQLite. Use a PostgreSQL test connection with permission to create a disposable test database to run it.
 
-Browser checks used a separate SQLite database, synthetic reader and staff accounts, and desktop and mobile viewports. The project uses real database queries for all counts and charts shown in the screenshots.
+Browser checks covered reader and staff workflows on desktop and mobile. Counts and charts in the screenshots come from database queries.
 
 ## Deployment
 
