@@ -63,6 +63,11 @@ def get_expiry():
 
 
 class IssuedBook(models.Model):
+    class FineStatus(models.TextChoices):
+        OUTSTANDING = "outstanding", "Outstanding"
+        PAID = "paid", "Paid"
+        WAIVED = "waived", "Waived"
+
     # ForeignKey for better relationships
     student = models.ForeignKey(
         StudentExtra, on_delete=models.SET_NULL, null=True, blank=True
@@ -93,6 +98,22 @@ class IssuedBook(models.Model):
     returned_at = models.DateTimeField(null=True, blank=True)
     legacy = models.BooleanField(default=False, editable=False)
     overdue_on = models.DateField(null=True, blank=True)
+    fine_daily_rate = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+    fine_grace_days = models.PositiveSmallIntegerField(default=0)
+    fine_status = models.CharField(
+        max_length=11, choices=FineStatus, default=FineStatus.OUTSTANDING
+    )
+
+    def overdue_days(self, today=None):
+        if self.returned:
+            if not self.returned_at:
+                return None
+            today = timezone.localdate(self.returned_at)
+        return max(0, ((today or timezone.localdate()) - self.return_date).days)
+
+    def overdue_fine(self, today=None):
+        chargeable_days = max(0, (self.overdue_days(today) or 0) - self.fine_grace_days)
+        return self.fine_daily_rate * chargeable_days
 
     class Meta:
         app_label = "library"

@@ -7,6 +7,7 @@ from django.db import IntegrityError, transaction
 from django.db.models import Q
 from django.shortcuts import redirect, render
 
+from apps.books.models import IssuedBook
 from apps.core.models import Library
 from apps.core.views import staff_required
 
@@ -107,7 +108,12 @@ def delete_students_view(request):
                 records = StudentExtra.objects.filter(
                     id__in=selected_students, library=library
                 )
-                if records.filter(issuedbook__isnull=False).exists():
+                linked_borrowers = IssuedBook.objects.filter(
+                    book__library=library, student__isnull=True, borrower__isnull=False
+                ).values("borrower_id")
+                if records.filter(
+                    Q(issuedbook__isnull=False) | Q(user_id__in=linked_borrowers)
+                ).exists():
                     messages.error(
                         request,
                         "Reader records with circulation history must be retained.",
