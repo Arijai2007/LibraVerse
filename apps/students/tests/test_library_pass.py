@@ -1,6 +1,7 @@
 from datetime import datetime, time, timedelta
 from decimal import Decimal
 from unittest.mock import patch
+from urllib.parse import urlencode
 
 from django.contrib.auth.models import User
 from django.test import TestCase
@@ -63,8 +64,47 @@ class LibraryPassTests(TestCase):
             with self.subTest(user=user):
                 self.client.force_login(user)
                 self.assertEqual(self.client.get(url).status_code, status)
+                self.assertEqual(self.client.post(url).status_code, status)
                 self.assertEqual(self.client.get(qr).status_code, status)
                 self.client.logout()
+
+    def test_scanned_pass_can_open_staff_workspace_after_sign_in_to_another_library(self):
+        other_library = Library.objects.get(owner=self.outsider)
+        LibraryMembership.objects.create(
+            library=other_library, user=self.librarian, role="member",
+            must_change_password=False,
+        )
+        self.client.force_login(self.owner)
+        url = self.pass_url()
+        self.client.logout()
+
+        login = reverse("staff_login") + "?" + urlencode({"next": url})
+        self.assertRedirects(self.client.get(url), login, fetch_redirect_response=False)
+        self.assertContains(
+            self.client.post(
+                login, {"username": self.librarian.username, "password": "Library-pass-test"}
+            ),
+            other_library.name,
+        )
+        self.assertRedirects(
+            self.client.post(login, {"selected_library": other_library.pk}),
+            url,
+            fetch_redirect_response=False,
+        )
+        prompt = self.client.get(url)
+        self.assertContains(prompt, "Open library workspace")
+        self.assertContains(prompt, self.library.name)
+        self.assertNotContains(prompt, self.student.name)
+        self.assertEqual(self.client.session["current_library_id"], other_library.pk)
+
+        self.assertRedirects(self.client.post(url), url)
+        self.assertEqual(self.client.session["current_library_id"], self.library.pk)
+        self.assertContains(self.client.get(url), self.student.name)
+        token = resolve(url).kwargs["token"]
+        self.assertEqual(
+            self.client.get(reverse("student_pass_qr", args=[token]))["Content-Type"],
+            "image/svg+xml",
+        )
 
     def test_fine_accrues_freezes_on_return_and_can_only_be_settled_once(self):
         policy = reverse("fine_policy")

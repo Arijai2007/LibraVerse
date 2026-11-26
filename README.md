@@ -179,7 +179,9 @@ Use **Sign in** for reader accounts and **Staff sign in** for library owners and
 
 ### Student passes and overdue fines
 
-Open **Offline readers → Open pass** to see a student's borrowing history and printable QR code. A scan opens the same history after staff sign in and select the student's library workspace.
+Open **Offline readers → Open pass** to see a student's borrowing history and printable QR code. Scan the pass with your phone camera and sign in as staff. If you’re in another library, choose **Open library workspace** to continue to the pass.
+
+For phone scans against a local development server, use an address your phone can reach. Bind Django to `0.0.0.0:8000`, add your computer's LAN IP to `ALLOWED_HOSTS`, and open LibraVerse at that IP before printing labels. Your phone and computer need access to the same network.
 
 Owners can set a daily fine in rupees and a grace period under **Library operations → Configure overdue fines**. Fines start disabled. Each new student loan keeps the policy in effect at checkout. The amount accrues after the grace period and stops on the return date. Staff can mark a returned loan's fine paid or waive it from the student's pass. Existing loans keep a zero rate, and loans to accounts without a student record are outside the student fine policy.
 

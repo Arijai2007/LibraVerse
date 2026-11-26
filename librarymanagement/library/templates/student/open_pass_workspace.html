@@ -1,0 +1,14 @@
+{% extends "verse/shell.html" %}
+{% block title %}Student library pass — LibraVerse{% endblock %}
+{% block main %}
+<div class="wrap narrow section-space">
+  <h1>Student library pass</h1>
+  <section class="surface">
+    <p>This pass belongs to {{ pass_library.name }}.</p>
+    <form method="post">
+      {% csrf_token %}
+      <button class="button forest">Open library workspace</button>
+    </form>
+  </section>
+</div>
+{% endblock %}
