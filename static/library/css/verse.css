@@ -143,6 +143,7 @@
 .verse-workspace .circulation-form .select2-selection__arrow { top: 50%; transform: translateY(-50%); }
 .suggestions { position: absolute; z-index: 4; top: calc(100% + .3rem); inset-inline: 0; background: #fff; border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 10px 22px #223a2926; padding: .35rem; }
 .suggestions a { display: block; padding: .6rem .7rem; border-radius: 4px; }
+.suggestions p { margin: 0; padding: .6rem .7rem; color: var(--muted); }
 .suggestions a:hover, .suggestions a:focus { background: var(--soft); }
 .suggestions small { display: block; color: var(--muted); }
 .result-count, .interaction-status { color: var(--muted); font-size: .9rem; }

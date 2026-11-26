@@ -38,6 +38,12 @@
           if (!response.ok) return;
           const {results} = await response.json();
           if (operation.signal.aborted || document.activeElement !== input) return;
+          if (!results.length) {
+            const empty = document.createElement('p');
+            empty.setAttribute('role', 'status');
+            empty.textContent = 'No matching titles.';
+            panel.append(empty);
+          }
           for (const result of results) {
             const link = document.createElement('a');
             link.href = result.url;
@@ -47,7 +53,7 @@
             link.append(extra);
             panel.append(link);
           }
-          panel.hidden = !results.length;
+          panel.hidden = false;
         } catch (error) {
           if (!operation.signal.aborted) hide();
         }
@@ -55,9 +61,10 @@
     });
     input.addEventListener('keydown', event => {
       if (event.key === 'Escape') dismiss();
-      if (event.key === 'ArrowDown' && !panel.hidden) {
+      const firstResult = panel.querySelector('a');
+      if (event.key === 'ArrowDown' && firstResult) {
         event.preventDefault();
-        panel.querySelector('a')?.focus();
+        firstResult.focus();
       }
     });
     panel.addEventListener('keydown', event => {

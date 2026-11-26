@@ -417,11 +417,21 @@ class CirculationTests(TestCase):
             (librarian, staff, "title_inventory"),
         ):
             self.assertEqual(client.get(url, {"q": "fo"}).json(), {"results": []})
-            for term in ("for", "forest of books", "978085"):
+            for term in (
+                "for",
+                "forest of books",
+                "books  forest   Finch",
+                "S. Finch forest",
+                "978-0-857",
+            ):
                 results = client.get(url, {"q": term}).json()["results"]
                 self.assertEqual([match["url"] for match in results], [
                     reverse(detail, args=[self.title.pk])
                 ])
+        self.assertContains(
+            self.client.get(reverse("catalogue"), {"q": "books forest Finch"}),
+            self.title.name,
+        )
         self.assertEqual(
             self.client.get(public, {"q": "for", "availability": "available"}).json(),
             {"results": []},

@@ -44,13 +44,16 @@ def visible_books(user):
 
 
 def search_titles(books, term):
-    if term:
-        isbn = term.replace("-", "").replace(" ", "")
-        criteria = Q(name__icontains=term) | Q(author__icontains=term)
-        if isbn:
-            criteria |= Q(isbn__icontains=isbn)
-        books = books.filter(criteria)
-    return books
+    words = term.split()
+    if not words:
+        return books
+    criteria = Q()
+    for word in words:
+        criteria &= Q(name__icontains=word) | Q(author__icontains=word)
+    isbn = "".join(words).replace("-", "")
+    if isbn:
+        criteria |= Q(isbn__icontains=isbn)
+    return books.filter(criteria)
 
 
 def title_suggestions(books, detail_view, include_library=False):
