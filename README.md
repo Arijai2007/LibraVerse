@@ -215,7 +215,7 @@ Browser checks used a separate SQLite database, synthetic reader and staff accou
 Django renders the pages on Render. Vercel serves the public web address and the catalogue's CSS, JavaScript, and images. It forwards page and form requests to Render, so login and reservations use one public origin.
 
 1. In Render, create a **Blueprint** from the connected GitHub repository and choose `main`. The Blueprint defines the Django web service, PostgreSQL database, database migrations, and the `/healthz/` check. Use the connected GitHub repository rather than its public clone URL so Render can auto-deploy.
-2. In Vercel, import the same repository and select `main` as the production branch. Set `LIBRAVERSE_RENDER_ORIGIN` to the service's HTTPS `onrender.com` origin, with no path. Use the repository's root as the project root. Disable preview deployments or give previews an isolated backend and database.
+2. In Vercel, import this repository or an up-to-date fork and select `main` as the production branch. Use the repository root. `vercel.json` points to the LibraVerse Render service. If using another backend, update both rewrite destinations. Disable preview deployments or give previews an isolated backend and database.
 3. In Render, set `PUBLIC_BASE_URL` and `CSRF_TRUSTED_ORIGINS` to the exact HTTPS Vercel production origin. Set `ALLOWED_HOSTS` to the Vercel hostname without the scheme. Render's own hostname is allowed automatically. Redeploy Render after applying these settings.
 4. Check the homepage and `/healthz/` on the Vercel URL. Sign in there and submit a reservation to verify sessions, redirects, and CSRF through the proxy. Check a generated QR link against the public URL.
 
