@@ -49,7 +49,7 @@ class StudentCSVPDFViewTests(TestCase):
     def test_export_students_csv_requires_login(self):
         response = self.client.get(reverse("export_students_csv"))
         self.assertEqual(response.status_code, 302)
-        self.assertIn("adminlogin", response.url)
+        self.assertTrue(response.url.startswith(reverse("staff_login")))
 
     def test_export_students_csv_returns_200(self):
         self.client.login(username="student", password="12345")
